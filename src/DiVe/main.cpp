@@ -7,6 +7,7 @@
  */
 
 #include <iostream>
+#include <fstream>
 
 // used by the protobuf example below:
 // #include <fstream>
@@ -55,4 +56,10 @@ int main(int argc, char** argv) {
 
     fmt::print("Path to topology file: {}\n", input);
     fmt::print("Router ID: {}\n", id);
+
+    std::ifstream f{input};
+    json j;
+    f >> j;
+
+    std::cout << j << std::endl;
 }
