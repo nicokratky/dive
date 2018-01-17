@@ -1,0 +1,71 @@
+{
+    "nodes": [
+        {
+            "id": "A",
+            "ip_address": "127.0.0.1",
+            "port": 5000
+        },
+        {
+            "id": "B",
+            "ip_address": "127.0.0.1",
+            "port": 5001
+        },
+        {
+            "id": "C",
+            "ip_address": "127.0.0.1",
+            "port": 5002
+        },
+        {
+            "id": "D",
+            "ip_address": "127.0.0.1",
+            "port": 5003
+        },
+        {
+            "id": "E",
+            "ip_address": "127.0.0.1",
+            "port": 5004
+        },
+        {
+            "id": "F",
+            "ip_address": "127.0.0.1",
+            "port": 5005
+        },
+    ],
+    "links": [
+        {
+            "source": "A",
+            "target": "D",
+            "cost": 1
+        },
+        {
+            "source": "A",
+            "target": "B",
+            "cost": 1
+        },
+        {
+            "source": "A",
+            "target": "F",
+            "cost": 1
+        },
+        {
+            "source": "B",
+            "target": "C",
+            "cost": 1
+        },
+        {
+            "source": "C",
+            "target": "F",
+            "cost": 1
+        },
+        {
+            "source": "C",
+            "target": "E",
+            "cost": 1
+        },
+        {
+            "source": "F",
+            "target": "E",
+            "cost": 1
+        }
+    ]
+}
