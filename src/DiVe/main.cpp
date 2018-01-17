@@ -8,7 +8,8 @@
  */
 
 #include <iostream>
-#include <fstream>
+#include <fstream> // ifstream
+#include <sys/stat.h> // stat
 
 // used by the protobuf example below:
 // #include <fstream>
@@ -50,6 +51,24 @@ using json = nlohmann::json;
 bool file_exists(const std::string& filename) {
     struct stat buffer;
     return (stat(filename.c_str(), &buffer) == 0);
+}
+
+
+/*!
+ * \brief Print the distance vector
+ * \param dv distance vector
+ * \return void
+ */
+void print_distance_vector(std::map<std::string, int>& dv) {
+    for (const auto& node: dv) {
+        std::cout << fmt::format("{:>8}", node.first);
+    }
+    std::cout << std::endl;
+
+    for (const auto& node: dv) {
+        std::cout << fmt::format("{:>8}", node.second);
+    }
+    std::cout << std::endl;
 }
 
 
@@ -104,4 +123,29 @@ int main(int argc, char** argv) {
                             nodes[id]["ip_address"].get<std::string>(),
                             nodes[id]["port"].get<int>()
                             ) << std::endl;
+
+    std::map<std::string, int> distance_vector;
+
+    for (json::iterator it = nodes.begin(); it != nodes.end(); ++it) {
+        if (it.key() == id) {
+            distance_vector[id] = 0;
+        }
+        else {
+            distance_vector[it.key()] = -1;
+        }
+    }
+
+    for (const auto& link: links) {
+        if (link["source"] == id) {
+            // link is a neighbour
+            distance_vector[link["target"].get<std::string>()] = 1;
+        }
+        else if (link["target"] == id) {
+            // link is a neighbour
+            distance_vector[link["source"].get<std::string>()] = 1;
+        }
+    }
+
+    std::cout << "Initialized Distance Vector" << std::endl;
+    print_distance_vector(distance_vector);
 }
