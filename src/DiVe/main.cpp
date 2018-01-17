@@ -41,5 +41,18 @@ using json = nlohmann::json;
 //#include "person.pb.h"
 
 int main(int argc, char** argv) {
+    std::string input;
+    std::string id;
 
+    auto cli = (
+        clipp::value("topology file", input),
+        clipp::value("router id", id)
+    );
+
+    if (!clipp::parse(argc, argv, cli)) {
+        std::cout << clipp::make_man_page(cli, argv[0]);
+    }
+
+    fmt::print("Path to topology file: {}\n", input);
+    fmt::print("Router ID: {}\n", id);
 }
