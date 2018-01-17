@@ -1,9 +1,10 @@
-/*
- * name: Nico Kratky
+/*!
+ * \author Nico Kratky
+ * \file main.cpp
+ *
  * matnr: i13083
  * catnr: 13
- * class 5cHIF
- * file: main.cpp
+ * class: 5cHIF
  */
 
 #include <iostream>
@@ -41,6 +42,17 @@ using json = nlohmann::json;
 // used by the protobuf example below:
 //#include "person.pb.h"
 
+/*!
+ * \brief Check if a file exists
+ * \param filename path to file
+ * \return true if the file exists, else false
+ */
+bool file_exists(const std::string& filename) {
+    struct stat buffer;
+    return (stat(filename.c_str(), &buffer) == 0);
+}
+
+
 int main(int argc, char** argv) {
     std::string input;
     std::string id;
@@ -52,14 +64,44 @@ int main(int argc, char** argv) {
 
     if (!clipp::parse(argc, argv, cli)) {
         std::cout << clipp::make_man_page(cli, argv[0]);
+        return 1;
     }
 
-    fmt::print("Path to topology file: {}\n", input);
-    fmt::print("Router ID: {}\n", id);
+    auto logger = spdlog::stdout_color_mt("logger");
+
+    logger->debug("Topology file: {}", input);
+    logger->debug("Router ID: {}", id);
+
+    if (!file_exists(input)) {
+        logger->error("{} does not exist.", input);
+        return 1;
+    }
 
     std::ifstream f{input};
     json j;
     f >> j;
 
-    std::cout << j << std::endl;
+    json nodes = j["nodes"];
+    json links = j["links"];
+
+    // If either no nodes or links are available, abort
+    if (nodes.empty() || links.empty()) {
+        logger->error("Topology file malformed.");
+        return 1;
+    }
+
+    if (nodes.count(id) != 1) {
+        logger->error("{} does not exist or exists multiple times.", id);
+        return 1;
+    }
+
+    std::cout << fmt::format("Nodes in topology: {}",
+                            nodes.size()
+                            ) << std::endl;
+
+    std::cout << fmt::format("I am {} ({}, {})",
+                            id,
+                            nodes[id]["ip_address"].get<std::string>(),
+                            nodes[id]["port"].get<int>()
+                            ) << std::endl;
 }
