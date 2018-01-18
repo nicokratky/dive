@@ -1,18 +1,20 @@
 /*!
  * \author Nico Kratky
  * \file main.cpp
+ * \copyright Copyright 2018 Nico Kratky.
+ * This project is released under the Boost Software License.
  *
  * matnr: i13083
  * catnr: 13
  * class: 5cHIF
  */
 
-#include <iostream>
-#include <fstream> // ifstream
-#include <sys/stat.h> // stat
+#include <sys/stat.h>  // stat
 
-// used by the protobuf example below:
-// #include <fstream>
+#include <iostream>
+#include <fstream>  // ifstream
+#include <map>
+#include <string>
 
 // only if using asio
 #pragma GCC diagnostic push
@@ -40,8 +42,10 @@ using json = nlohmann::json;
 #include "clipp.h"
 #pragma GCC diagnostic pop
 
+#include "router.h"
+
 // used by the protobuf example below:
-//#include "person.pb.h"
+// #include "person.pb.h"
 
 /*!
  * \brief Check if a file exists
@@ -54,32 +58,13 @@ bool file_exists(const std::string& filename) {
 }
 
 
-/*!
- * \brief Print the distance vector
- * \param dv distance vector
- * \return void
- */
-void print_distance_vector(std::map<std::string, int>& dv) {
-    for (const auto& node: dv) {
-        std::cout << fmt::format("{:>8}", node.first);
-    }
-    std::cout << std::endl;
-
-    for (const auto& node: dv) {
-        std::cout << fmt::format("{:>8}", node.second);
-    }
-    std::cout << std::endl;
-}
-
-
 int main(int argc, char** argv) {
     std::string input;
     std::string id;
 
     auto cli = (
         clipp::value("topology file", input),
-        clipp::value("router id", id)
-    );
+        clipp::value("router id", id));
 
     if (!clipp::parse(argc, argv, cli)) {
         std::cout << clipp::make_man_page(cli, argv[0]);
@@ -115,37 +100,16 @@ int main(int argc, char** argv) {
     }
 
     std::cout << fmt::format("Nodes in topology: {}",
-                            nodes.size()
-                            ) << std::endl;
+                            nodes.size()) << std::endl;
 
     std::cout << fmt::format("I am {} ({}, {})",
                             id,
                             nodes[id]["ip_address"].get<std::string>(),
-                            nodes[id]["port"].get<int>()
-                            ) << std::endl;
+                            nodes[id]["port"].get<int>()) << std::endl;
 
-    std::map<std::string, int> distance_vector;
+    Router router{id};
 
-    for (json::iterator it = nodes.begin(); it != nodes.end(); ++it) {
-        if (it.key() == id) {
-            distance_vector[id] = 0;
-        }
-        else {
-            distance_vector[it.key()] = -1;
-        }
-    }
+    router.initialize_from_json(nodes, links);
 
-    for (const auto& link: links) {
-        if (link["source"] == id) {
-            // link is a neighbour
-            distance_vector[link["target"].get<std::string>()] = 1;
-        }
-        else if (link["target"] == id) {
-            // link is a neighbour
-            distance_vector[link["source"].get<std::string>()] = 1;
-        }
-    }
-
-    std::cout << "Initialized Distance Vector" << std::endl;
-    print_distance_vector(distance_vector);
+    std::cout << router << std::endl;
 }
