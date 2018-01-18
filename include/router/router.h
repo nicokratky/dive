@@ -9,10 +9,16 @@
  * class: 5cHIF
  */
 
+/*
+ * C++ system files
+ */
 #include <iostream>
 #include <map>
 #include <string>
 
+/*
+ * Vendor header files
+ */
 #include "json.hpp"
 
 /*!
@@ -22,7 +28,7 @@ class Router {
 
   public:
 
-      Router(std::string router_id);
+      Router(std::string& router_id, std::string& ip_address, int port);
 
       /*!
        * \brief Set the cost that it takes to reach a router

@@ -9,39 +9,36 @@
  * class: 5cHIF
  */
 
+/*
+ * C system files
+ */
 #include <sys/stat.h>  // stat
 
+/*
+ * C++ system files
+ */
 #include <iostream>
 #include <fstream>  // ifstream
 #include <map>
 #include <string>
 
-// only if using asio
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-#pragma GCC diagnostic ignored "-Wconversion"
+/*
+ * Vendor header files
+ */
 #include "asio.hpp"
-#pragma GCC diagnostic pop
 
-// only if using spdlog
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include "spdlog/spdlog.h"
-#pragma GCC diagnostic pop
 
-// only if using fmt
 #include "fmt/format.h"
 
-// only if using json
 #include "json.hpp"
 using json = nlohmann::json;
 
-// only if using clipp
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include "clipp.h"
-#pragma GCC diagnostic pop
 
+/*
+ * DiVe header files
+ */
 #include "router.h"
 
 // used by the protobuf example below:
@@ -102,12 +99,10 @@ int main(int argc, char** argv) {
     std::cout << fmt::format("Nodes in topology: {}",
                             nodes.size()) << std::endl;
 
-    std::cout << fmt::format("I am {} ({}, {})",
-                            id,
-                            nodes[id]["ip_address"].get<std::string>(),
-                            nodes[id]["port"].get<int>()) << std::endl;
+    std::string ip_address{nodes[id]["ip_address"].get<std::string>()};
+    int port{nodes[id]["port"].get<int>()};
 
-    Router router{id};
+    Router router{id, ip_address, port};
 
     router.initialize_from_json(nodes, links);
 

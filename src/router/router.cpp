@@ -1,23 +1,34 @@
 /*!
- * \author Nico Kratk
+ * \author Nico Kratky
  * \file router.cpp
  * \copyright Copyright 2018 Nico Kratky.
  * This project is released under the Boost Software License.
  *
  */
 
+/*
+ * header file related to this file
+ */
 #include "router.h"
 
+/*
+ * C++ system files
+ */
 #include <iostream>
 #include <string>
 
+/*
+ * Vendor header files
+ */
 #include "fmt/format.h"
 
 #include "json.hpp"
 using json = nlohmann::json;
 
-Router::Router(std::string router_id) :
-    router_id_{router_id} {
+Router::Router(std::string& router_id, std::string& ip_address, int port) :
+    router_id_{router_id},
+    ip_address_{ip_address},
+    port_{port} {
 }
 
 
@@ -48,6 +59,11 @@ void Router::initialize_from_json(json nodes, json links) {
 
 
 std::ostream& operator<<(std::ostream& os, const Router& r) {
+    os << fmt::format("Router ID: {}\nIP Address: {}\nPort: {}",
+                      r.router_id_,
+                      r.ip_address_,
+                      r.port_) << std::endl;;
+
     for (const auto& node : r.distance_vector_) {
         os << fmt::format("{:<5}", node.first);
     }
