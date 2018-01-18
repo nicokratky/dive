@@ -20,6 +20,8 @@
 /*
  * Vendor header files
  */
+#include "spdlog/spdlog.h"
+
 #include "fmt/format.h"
 
 #include "json.hpp"
@@ -29,6 +31,13 @@ Router::Router(std::string& router_id, std::string& ip_address, int port) :
     router_id_{router_id},
     ip_address_{ip_address},
     port_{port} {
+}
+
+
+Router::Router(std::string& router_id, std::string& ip_address, int port,
+               std::shared_ptr<spdlog::logger> logger) :
+    Router(router_id, ip_address, port) {
+    logger_ = logger;
 }
 
 
