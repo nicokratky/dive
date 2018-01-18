@@ -9,7 +9,7 @@ add_definitions(-DASIO_STANDALONE)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-  add_definitions(-pedantic-errors -Werror -Wall -Wextra)  # according to GSL
+  add_definitions(-pedantic -Wall -Wextra)  # according to GSL
   # add_definitions(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
   # add_definitions(-Wl,--no-as-needed)  # needed for building on buggy configurations
 else()  # currently not maintained any more:
@@ -22,10 +22,6 @@ else()  # currently not maintained any more:
   add_definitions(-D_WIN32_WINNT=0x0501)
   add_definitions(/Wall /EHsc)
 endif()
-
-find_package(Threads)
-
-include_directories(include)
 
 # important: Don't forget to set the environment variables accordingly (if needed)!
 # ...and uncomment all unneeded statemenets
@@ -54,9 +50,15 @@ set(FMT_LIB_PATH $ENV{FMT_PATH}/build/fmt/libfmt.a)
 
 # only needed for protobuf
 # ko:: Be aware: variable names changed in cmake 3.6 from PROTOBUF_* to Protobuf_*
+find_package(Threads)
 find_package(Protobuf REQUIRED)
+
+# global include dir
+include_directories("${CMAKE_SOURCE_DIR}/include/")
+
 include_directories(${Protobuf_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+
 file(GLOB protos protos/*.proto)
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS ${protos})
 
@@ -64,17 +66,26 @@ macro(create_targets)
     if(${ARGC} GREATER 1)
         foreach(curr_target ${ARGV})
             message(STATUS ${curr_target})
-            file(GLOB sources src/${curr_target}/*.cpp src/*.cpp include/${curr_target}/*.h include/*.h)
+
+            file(GLOB sources ${CMAKE_SOURCE_DIR}/src/${curr_target}/*.cpp ${CMAKE_SOURCE_DIR}/src/*.cpp)
+
+            include_directories(${CMAKE_SOURCE_DIR}/include/${curr_target}/)
+
             add_executable(${curr_target} ${sources} ${PROTO_SRCS} ${PROTO_HDRS})
             target_link_libraries(${curr_target} ${CMAKE_THREAD_LIBS_INIT} ${FMT_LIB_PATH} ${PROTOBUF_LIBRARIES})
         endforeach(curr_target)
     else()
         message(${ARGV0})
-        if(EXISTS "${CMAKE_SOURCE_DIR}/src/${ARGV0}" AND IS_DIRECTORY "${CMAKE_SOURCE_DIR}/src/${ARGV0}")
-            file(GLOB sources src/${ARGV0}/*.cpp src/*.cpp include/${ARGV0}/*.h include/*.h)
-        else()
-            file(GLOB sources src/*.cpp include/*.h)
+        if(EXISTS "${CMAKE_SOURCE_DIR}/include/${ARGV0}" AND IS_DIRECTORY "${CMAKE_SOURCE_DIR}/include/${ARGV0}")
+            include_directories("${CMAKE_SOURCE_DIR}/include/${ARGV0}")
         endif()
+
+        if(EXISTS "${CMAKE_SOURCE_DIR}/src/${ARGV0}" AND IS_DIRECTORY "${CMAKE_SOURCE_DIR}/src/${ARGV0}")
+            file(GLOB sources ${CMAKE_SOURCE_DIR}/src/${ARGV0}/*.cpp src/*.cpp)
+        else()
+            file(GLOB sources ${CMAKE_SOURCE_DIR}/src/*.cpp)
+        endif()
+
         add_executable(${ARGV0} ${sources} ${PROTO_SRCS} ${PROTO_HDRS})
         target_link_libraries(${ARGV0} ${CMAKE_THREAD_LIBS_INIT} ${FMT_LIB_PATH} ${PROTOBUF_LIBRARIES})
     endif()
@@ -100,7 +111,7 @@ if (DOXYGEN_FOUND)
         VERBATIM
     )
 else ()
-    message("Doxygen need to be installed to generate the doxygen documentation")
+    message("Doxygen needs to be installed to generate the doxygen documentation")
 endif ()
 
 # replace xxx with list of executables
@@ -109,4 +120,4 @@ endif ()
 # else -> source files specific for each target are in respective
 #   subdirectories of 'src' like in 'src/exe1', 'src/exe2', and 'src/exe3'
 #   common source files are in 'src'
-create_targets(dive)
+create_targets(router)
