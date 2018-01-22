@@ -114,6 +114,8 @@ void Router::run() {
 void Router::send_update() {
     dive::DistanceVector dv{pack_distance_vector()};
 
+    asio::error_code ec;
+
     for (const auto& node: distance_vector_) {
         if (node.second == 1) {
             // node is neighbour
@@ -123,7 +125,11 @@ void Router::send_update() {
                     std::to_string(links_[node.first].port))};
 
             tcp::socket sock{io_context_};
-            asio::connect(sock, endpoint);
+
+            do {
+                asio::connect(sock, endpoint, ec);
+            }
+            while (ec);
 
             asio::streambuf b;
             std::ostream os{&b};
