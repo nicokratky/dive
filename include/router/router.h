@@ -111,9 +111,22 @@ class Router {
                                     const Router& r);
 
   private:
+    /*!
+     * \brief Update all neighbours.
+     * Sends the current distance vector to all neighbours
+     *
+     */
     void send_update();
+    /*!
+     * \brief Wait for all neighbours to send an update
+     */
     void receive_updates();
 
+    /*!
+     * \brief Create a Protobuf object from the distance vector
+     *
+     * \return dive::DistanceVector
+     */
     dive::DistanceVector pack_distance_vector();
 
     std::shared_ptr<spdlog::logger> logger_;
