@@ -2,27 +2,27 @@
     "nodes": {
         "A": {
             "ip_address": "127.0.0.1",
-            "port": 5000
+            "port": 16022
         },
         "B": {
             "ip_address": "127.0.0.1",
-            "port": 5001
+            "port": 16023
         },
         "C": {
             "ip_address": "127.0.0.1",
-            "port": 5002
+            "port": 16024
         },
         "D": {
             "ip_address": "127.0.0.1",
-            "port": 5003
+            "port": 16025
         },
         "E": {
             "ip_address": "127.0.0.1",
-            "port": 5004
+            "port": 16026
         },
         "F": {
             "ip_address": "127.0.0.1",
-            "port": 5005
+            "port": 16027
         }
     },
     "links": [
