@@ -1,3 +1,20 @@
 syntax = "proto3";
 
 package dive;
+
+message DistanceVector {
+    string router_id = 1;
+
+    message Distance {
+        string router_id = 1;
+        sint32 distance = 2;
+    }
+
+    repeated Distance distance_vector = 2;
+
+}
+
+message ControlMessage {
+    string router_id = 1;
+    string payload = 2;
+}

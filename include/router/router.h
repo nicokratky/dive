@@ -23,6 +23,8 @@
 /*
  * Vendor header files
  */
+#include "asio.hpp"
+
 #include "spdlog/spdlog.h"
 
 #include "json.hpp"
@@ -64,9 +66,10 @@ struct Link {
 class Router {
   public:
     Router(const std::string& router_id, const std::string& ip_address,
-           int port);
+           unsigned short port, asio::io_context& io_context);
     Router(const std::string& router_id, const std::string& ip_address,
-           int port, std::shared_ptr<spdlog::logger> logger);
+           unsigned short port, asio::io_context& io_context,
+           std::shared_ptr<spdlog::logger> logger);
 
     /*!
     * \brief Set the cost that it takes to reach a router
@@ -89,6 +92,14 @@ class Router {
     void initialize_from_json(nlohmann::json nodes, nlohmann::json links);
 
     /*!
+     * \brief "Boot" the router
+     * starts sending routing table updates
+     *
+     * \return void
+     */
+    void run();
+
+    /*!
     * \brief Overloaded << operator
     * Prints the routers routing table
     */
@@ -96,15 +107,25 @@ class Router {
                                     const Router& r);
 
   private:
+    void send_update();
+    void receive_updates();
+
     std::shared_ptr<spdlog::logger> logger_;
 
     std::string router_id_;
 
     std::string ip_address_;
-    int port_;
+    unsigned short port_;
 
     std::map<std::string, int> distance_vector_;
     std::map<std::string, Link> links_;
+
+    // SERVER
+    asio::io_context& io_context_;
+    asio::ip::tcp::endpoint endpoint_;
+    asio::ip::tcp::acceptor acceptor_;
+
+    // CLIENT
 };
 
 #endif  // DIVE_ROUTER_ROUTER_H

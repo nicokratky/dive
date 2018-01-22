@@ -17,10 +17,13 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <thread>
 
 /*
  * Vendor header files
  */
+#include "asio.hpp"
+
 #include "spdlog/spdlog.h"
 
 #include "fmt/format.h"
@@ -28,21 +31,28 @@
 #include "json.hpp"
 using json = nlohmann::json;
 
-Router::Router(std::string& router_id, std::string& ip_address, int port) :
+#include "dive.pb.h"
+
+Router::Router(const std::string& router_id, const std::string& ip_address,
+               unsigned short port, asio::io_context& io_context) :
     router_id_{router_id},
     ip_address_{ip_address},
-    port_{port} {
+    port_{port},
+    io_context_{io_context},
+    endpoint_{asio::ip::tcp::v4(), port_},
+    acceptor_{io_context_, endpoint_} {
 }
 
 
-Router::Router(std::string& router_id, std::string& ip_address, int port,
+Router::Router(const std::string& router_id, const std::string& ip_address,
+               unsigned short port, asio::io_context& io_context,
                std::shared_ptr<spdlog::logger> logger) :
-    Router(router_id, ip_address, port) {
+    Router(router_id, ip_address, port, io_context) {
     logger_ = logger;
 }
 
 
-void Router::set_cost(std::string& router_id, int cost) {
+void Router::set_cost(const std::string& router_id, int cost) {
     distance_vector_[router_id] = cost;
 }
 
@@ -82,6 +92,49 @@ void Router::initialize_from_json(json nodes, json links) {
 
             links_[target].next_hop = router_id_;
         }
+    }
+}
+
+
+void Router::run() {
+    std::thread update_thread{&Router::receive_updates, this};
+    update_thread.detach();
+
+    send_update();
+}
+
+
+void Router::send_update() {
+
+}
+
+
+void Router::receive_updates() {
+    acceptor_.listen();
+
+    for (;;) {
+        asio::ip::tcp::socket sock{acceptor_.accept()};
+
+        int length;
+
+        std::size_t bytes_read = asio::read(sock,
+                                            asio::buffer(&length,
+                                                         sizeof(length)),
+                                            asio::transfer_exactly(4));
+
+        length = ntohl(length);
+
+        dive::DistanceVector dv;
+
+        asio::streambuf b;
+        asio::streambuf::mutable_buffers_type buf{b.prepare(length)};
+
+        bytes_read = read(sock, buf);
+
+        b.commit(bytes_read);
+
+        std::istream is{&b};
+        dv.ParseFromIstream(&is);
     }
 }
 

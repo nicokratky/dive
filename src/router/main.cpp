@@ -100,11 +100,17 @@ int main(int argc, char** argv) {
                             nodes.size()) << std::endl;
 
     std::string ip_address{nodes[id]["ip_address"].get<std::string>()};
-    int port{nodes[id]["port"].get<int>()};
+    unsigned short port{nodes[id]["port"].get<unsigned short>()};
 
-    Router router{id, ip_address, port};
+    asio::io_context io_context;
+
+    Router router{id, ip_address, port, io_context};
 
     router.initialize_from_json(nodes, links);
 
-    std::cout << router << std::endl;
+    logger->info("Router initialized");
+
+    logger->info("Starting router");
+    router.run();
+    logger->info("Router started");
 }
