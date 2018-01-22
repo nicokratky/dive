@@ -115,4 +115,6 @@ int main(int argc, char** argv) {
     logger->info("Starting router");
     router.run();
     logger->info("Router started");
+
+    google::protobuf::ShutdownProtobufLibrary();
 }
