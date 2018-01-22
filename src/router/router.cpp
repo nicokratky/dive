@@ -33,14 +33,17 @@ using json = nlohmann::json;
 
 #include "dive.pb.h"
 
+using namespace asio::ip;
+
 Router::Router(const std::string& router_id, const std::string& ip_address,
                unsigned short port, asio::io_context& io_context) :
     router_id_{router_id},
     ip_address_{ip_address},
     port_{port},
     io_context_{io_context},
-    endpoint_{asio::ip::tcp::v4(), port_},
-    acceptor_{io_context_, endpoint_} {
+    endpoint_{tcp::v4(), port_},
+    acceptor_{io_context_, endpoint_},
+    resolver_{io_context_} {
 }
 
 
@@ -49,6 +52,10 @@ Router::Router(const std::string& router_id, const std::string& ip_address,
                std::shared_ptr<spdlog::logger> logger) :
     Router(router_id, ip_address, port, io_context) {
     logger_ = logger;
+}
+
+
+Router::~Router() {
 }
 
 
@@ -67,7 +74,7 @@ void Router::initialize_from_json(json nodes, json links) {
 
             std::string ip_address{
                 nodes[it.key()]["ip_address"].get<std::string>()};
-            int port{nodes[it.key()]["port"].get<int>()};
+            unsigned short port{nodes[it.key()]["port"].get<unsigned short>()};
 
             Link l{ip_address, port};
             links_[it.key()] = l;
@@ -105,7 +112,32 @@ void Router::run() {
 
 
 void Router::send_update() {
+    dive::DistanceVector dv{pack_distance_vector()};
 
+    for (const auto& node: distance_vector_) {
+        if (node.second == 1) {
+            // node is neighbour
+
+            tcp::resolver::results_type endpoint{resolver_.resolve(
+                    links_[node.first].ip_address,
+                    std::to_string(links_[node.first].port))};
+
+            tcp::socket sock{io_context_};
+            asio::connect(sock, endpoint);
+
+            asio::streambuf b;
+            std::ostream os{&b};
+
+            dv.SerializeToOstream(&os);
+
+            uint32_t length{htonl(b.size())};
+
+            asio::write(sock, asio::buffer(&length, sizeof(length)));
+            asio::write(sock, b);
+
+            sock.close();
+        }
+    }
 }
 
 
@@ -113,9 +145,10 @@ void Router::receive_updates() {
     acceptor_.listen();
 
     for (;;) {
-        asio::ip::tcp::socket sock{acceptor_.accept()};
+        tcp::socket sock{io_context_};
+        acceptor_.accept(sock);
 
-        int length;
+        uint32_t length;
 
         std::size_t bytes_read = asio::read(sock,
                                             asio::buffer(&length,
@@ -135,7 +168,25 @@ void Router::receive_updates() {
 
         std::istream is{&b};
         dv.ParseFromIstream(&is);
+
+        sock.close();
     }
+}
+
+
+dive::DistanceVector Router::pack_distance_vector() {
+    dive::DistanceVector dv;
+
+    dv.set_router_id(router_id_);
+
+    for (const auto& node: distance_vector_) {
+        dive::DistanceVector::Distance* d{dv.add_distance_vector()};
+
+        d->set_router_id(node.first);
+        d->set_distance(node.second);
+    }
+
+    return dv;
 }
 
 

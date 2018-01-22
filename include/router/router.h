@@ -29,12 +29,14 @@
 
 #include "json.hpp"
 
+#include "dive.pb.h"
+
 /*!
  * \brief Stores link info
  */
 struct Link {
     std::string ip_address;
-    int port;
+    unsigned short port;
 
     /*!
      * \brief The router to which a packet has to be sent to reach the final
@@ -55,7 +57,7 @@ struct Link {
         port{l.port},
         next_hop{l.next_hop} {}
 
-    Link(std::string i, int p) :
+    Link(std::string i, unsigned short p) :
         ip_address{i}, port{p}, next_hop{} {
     }
 };
@@ -70,6 +72,8 @@ class Router {
     Router(const std::string& router_id, const std::string& ip_address,
            unsigned short port, asio::io_context& io_context,
            std::shared_ptr<spdlog::logger> logger);
+
+    ~Router();
 
     /*!
     * \brief Set the cost that it takes to reach a router
@@ -110,6 +114,8 @@ class Router {
     void send_update();
     void receive_updates();
 
+    dive::DistanceVector pack_distance_vector();
+
     std::shared_ptr<spdlog::logger> logger_;
 
     std::string router_id_;
@@ -126,6 +132,7 @@ class Router {
     asio::ip::tcp::acceptor acceptor_;
 
     // CLIENT
+    asio::ip::tcp::resolver resolver_;
 };
 
 #endif  // DIVE_ROUTER_ROUTER_H
