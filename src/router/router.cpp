@@ -18,6 +18,7 @@
 #include <string>
 #include <memory>
 #include <thread>
+#include <chrono>
 
 /*
  * Vendor header files
@@ -112,24 +113,34 @@ void Router::run() {
 
 
 void Router::send_update() {
+    logger_->info("Updating neighbours");
+
     dive::DistanceVector dv{pack_distance_vector()};
 
     asio::error_code ec;
 
-    for (const auto& node: distance_vector_) {
-        if (node.second == 1) {
+    auto node{distance_vector_.begin()};
+    while (node != distance_vector_.end()) {
+        if (node->second == 1) {
             // node is neighbour
+            logger_->debug("Sending update to {}", node->first);
 
             tcp::resolver::results_type endpoint{resolver_.resolve(
-                    links_[node.first].ip_address,
-                    std::to_string(links_[node.first].port))};
+                    links_[node->first].ip_address,
+                    std::to_string(links_[node->first].port))};
 
             tcp::socket sock{io_context_};
 
-            do {
-                asio::connect(sock, endpoint, ec);
+            asio::connect(sock, endpoint, ec);
+
+            if (ec) {
+                logger_->error("Connecting to {} failed. Retrying",
+                               node->first);
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+                continue;
             }
-            while (ec);
+
+            logger_->debug("Connected to {}", node->first);
 
             asio::streambuf b;
             std::ostream os{&b};
@@ -141,18 +152,25 @@ void Router::send_update() {
             asio::write(sock, asio::buffer(&length, sizeof(length)));
             asio::write(sock, b);
 
+            logger_->debug("Distance Vector sent");
+
             sock.close();
         }
+
+        ++node;
     }
 }
 
 
 void Router::receive_updates() {
+    logger_->info("Starting listening for updates");
     acceptor_.listen();
 
     for (;;) {
         tcp::socket sock{io_context_};
         acceptor_.accept(sock);
+
+        logger_->debug("Got connection");
 
         uint32_t length;
 

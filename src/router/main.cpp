@@ -69,6 +69,7 @@ int main(int argc, char** argv) {
     }
 
     auto logger = spdlog::stdout_color_mt("logger");
+    logger->set_level(spdlog::level::trace);
 
     logger->debug("Topology file: {}", input);
     logger->debug("Router ID: {}", id);
@@ -104,7 +105,7 @@ int main(int argc, char** argv) {
 
     asio::io_context io_context;
 
-    Router router{id, ip_address, port, io_context};
+    Router router{id, ip_address, port, io_context, logger};
 
     router.initialize_from_json(nodes, links);
 
