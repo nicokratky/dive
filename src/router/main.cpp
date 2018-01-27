@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     }
 
     auto logger = spdlog::stdout_color_mt("logger");
-    logger->set_level(spdlog::level::trace);
+    spdlog::set_level(spdlog::level::trace);
 
     logger->debug("Topology file: {}", input);
     logger->debug("Router ID: {}", id);
@@ -83,8 +83,8 @@ int main(int argc, char** argv) {
     json j;
     f >> j;
 
-    json nodes = j["nodes"];
-    json links = j["links"];
+    json nodes{j["nodes"]};
+    json links{j["links"]};
 
     // If either no nodes or links are available, abort
     if (nodes.empty() || links.empty()) {
@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 
     asio::io_context io_context;
 
-    Router router{id, ip_address, port, io_context, logger};
+    Router router{id, ip_address, port, io_context};
 
     router.initialize_from_json(nodes, links);
 
@@ -113,9 +113,13 @@ int main(int argc, char** argv) {
 
     logger->info("Router initialized");
 
-    logger->info("Starting router");
     router.run();
-    logger->info("Router started");
+
+    // for testing purposes only, otherwise router will shutdown
+    for (;;) {
+        logger->trace("Waiting for nothing...");
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
 
     google::protobuf::ShutdownProtobufLibrary();
 }

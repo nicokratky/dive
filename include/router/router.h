@@ -31,6 +31,9 @@
 
 #include "dive.pb.h"
 
+#include "server.h"
+#include "client.h"
+
 /*!
  * \brief Stores link info
  */
@@ -69,10 +72,6 @@ class Router {
   public:
     Router(const std::string& router_id, const std::string& ip_address,
            unsigned short port, asio::io_context& io_context);
-    Router(const std::string& router_id, const std::string& ip_address,
-           unsigned short port, asio::io_context& io_context,
-           std::shared_ptr<spdlog::logger> logger);
-
     ~Router();
 
     /*!
@@ -80,8 +79,6 @@ class Router {
     *
     * \param router_id
     * \param cost
-    *
-    * \return void
     */
     void set_cost(const std::string& router_id, int cost);
 
@@ -90,16 +87,12 @@ class Router {
     *
     * \param nodes
     * \param links
-    *
-    * \return void
     */
     void initialize_from_json(nlohmann::json nodes, nlohmann::json links);
 
     /*!
      * \brief "Boot" the router
-     * starts sending routing table updates
-     *
-     * \return void
+     * starts sending routing table updates and listening for updates
      */
     void run();
 
@@ -114,9 +107,8 @@ class Router {
     /*!
      * \brief Update all neighbours.
      * Sends the current distance vector to all neighbours
-     *
      */
-    void send_update();
+    void update_neighbours();
     /*!
      * \brief Wait for all neighbours to send an update
      */
@@ -124,10 +116,18 @@ class Router {
 
     /*!
      * \brief Create a Protobuf object from the distance vector
+     * Object will also be serialized
      *
-     * \return dive::DistanceVector
+     * \return serialized distance vector
      */
-    dive::DistanceVector pack_distance_vector();
+    std::string pack_distance_vector();
+
+    /*!
+     * \brief Send the current distance vector to all direct neighbours
+     *
+     * \param update current distance vector
+     */
+    void update_distance_vector(dive::DistanceVector update);
 
     std::shared_ptr<spdlog::logger> logger_;
 
@@ -139,13 +139,10 @@ class Router {
     std::map<std::string, int> distance_vector_;
     std::map<std::string, Link> links_;
 
-    // SERVER
+    // Networking
     asio::io_context& io_context_;
-    asio::ip::tcp::endpoint endpoint_;
-    asio::ip::tcp::acceptor acceptor_;
-
-    // CLIENT
-    asio::ip::tcp::resolver resolver_;
+    Server server_;
+    Client client_;
 };
 
 #endif  // DIVE_ROUTER_ROUTER_H

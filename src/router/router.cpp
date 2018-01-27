@@ -34,25 +34,20 @@ using json = nlohmann::json;
 
 #include "dive.pb.h"
 
-using namespace asio::ip;
+#include "server.h"
+#include "client.h"
+
+using asio::ip::tcp;
 
 Router::Router(const std::string& router_id, const std::string& ip_address,
                unsigned short port, asio::io_context& io_context) :
+    logger_{spdlog::stdout_color_mt("Router")},
     router_id_{router_id},
     ip_address_{ip_address},
     port_{port},
     io_context_{io_context},
-    endpoint_{tcp::v4(), port_},
-    acceptor_{io_context_, endpoint_},
-    resolver_{io_context_} {
-}
-
-
-Router::Router(const std::string& router_id, const std::string& ip_address,
-               unsigned short port, asio::io_context& io_context,
-               std::shared_ptr<spdlog::logger> logger) :
-    Router(router_id, ip_address, port, io_context) {
-    logger_ = logger;
+    server_{io_context_, port_},
+    client_{io_context_} {
 }
 
 
@@ -108,97 +103,40 @@ void Router::run() {
     std::thread update_thread{&Router::receive_updates, this};
     update_thread.detach();
 
-    send_update();
+    update_neighbours();
 }
 
 
-void Router::send_update() {
-    logger_->info("Updating neighbours");
-
-    dive::DistanceVector dv{pack_distance_vector()};
-
+void Router::update_neighbours() {
     asio::error_code ec;
 
-    auto node{distance_vector_.begin()};
-    while (node != distance_vector_.end()) {
-        if (node->second == 1) {
-            // node is neighbour
-            logger_->debug("Sending update to {}", node->first);
+    std::string distance_vector_update{pack_distance_vector()};
 
-            tcp::resolver::results_type endpoint{resolver_.resolve(
-                    links_[node->first].ip_address,
-                    std::to_string(links_[node->first].port))};
+    for (const auto& node : distance_vector_) {
+        // only update node if it is a direct neighbour
+        if (node.second != 1)
+            continue;
 
-            tcp::socket sock{io_context_};
+        logger_->info("Sending update to {}", node.first);
 
-            asio::connect(sock, endpoint, ec);
-
-            if (ec) {
-                logger_->error("Connecting to {} failed. Retrying",
-                               node->first);
-                std::this_thread::sleep_for(std::chrono::seconds(1));
-                continue;
-            }
-
-            logger_->debug("Connected to {}", node->first);
-
-            asio::streambuf b;
-            std::ostream os{&b};
-
-            dv.SerializeToOstream(&os);
-
-            uint32_t length{htonl(b.size())};
-
-            asio::write(sock, asio::buffer(&length, sizeof(length)));
-            asio::write(sock, b);
-
-            logger_->debug("Distance Vector sent");
-
-            sock.close();
-        }
-
-        ++node;
+        client_.send_to(links_[node.first].ip_address,
+                        links_[node.first].port,
+                        distance_vector_update);
     }
 }
 
 
 void Router::receive_updates() {
-    logger_->info("Starting listening for updates");
-    acceptor_.listen();
-
     for (;;) {
-        tcp::socket sock{io_context_};
-        acceptor_.accept(sock);
+        logger_->info("Waiting for update");
+        dive::DistanceVector update{server_.receive()};
 
-        logger_->debug("Got connection");
-
-        uint32_t length;
-
-        std::size_t bytes_read = asio::read(sock,
-                                            asio::buffer(&length,
-                                                         sizeof(length)),
-                                            asio::transfer_exactly(4));
-
-        length = ntohl(length);
-
-        dive::DistanceVector dv;
-
-        asio::streambuf b;
-        asio::streambuf::mutable_buffers_type buf{b.prepare(length)};
-
-        bytes_read = read(sock, buf);
-
-        b.commit(bytes_read);
-
-        std::istream is{&b};
-        dv.ParseFromIstream(&is);
-
-        sock.close();
+        update_distance_vector(update);
     }
 }
 
 
-dive::DistanceVector Router::pack_distance_vector() {
+std::string Router::pack_distance_vector() {
     dive::DistanceVector dv;
 
     dv.set_router_id(router_id_);
@@ -210,7 +148,16 @@ dive::DistanceVector Router::pack_distance_vector() {
         d->set_distance(node.second);
     }
 
-    return dv;
+    std::string container;
+
+    dv.SerializeToString(&container);
+
+    return container;
+}
+
+
+void Router::update_distance_vector(dive::DistanceVector update) {
+    logger_->info("Got update from {}", update.router_id());
 }
 
 
