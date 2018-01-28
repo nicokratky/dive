@@ -18,6 +18,7 @@
  * C++ system files
  */
 #include <string>
+#include <memory>
 
 /*
  * Vendor header files
@@ -34,7 +35,6 @@
  * \brief TCP server, can only receive messages
  */
 class Server {
-
   public:
     Server(asio::io_context& io_context, unsigned short port);
 
@@ -51,7 +51,6 @@ class Server {
 
     asio::io_context& io_context_;
     asio::ip::tcp::acceptor acceptor_;
-
 };
 
 #endif  // ROUTER_SERVER_h

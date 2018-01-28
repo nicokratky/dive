@@ -21,6 +21,7 @@
  * C++ system files
  */
 #include <string>
+#include <memory>
 
 /*
  * Vendor header files
@@ -33,7 +34,6 @@
  * Every message will be sent over a seperate connection
  */
 class Client {
-
   public:
     Client(asio::io_context& io_context);
 
@@ -76,7 +76,6 @@ class Client {
 
     asio::io_context& io_context_;
     asio::ip::tcp::resolver resolver_;
-
 };
 
 #endif  // ROUTER_CLIENT_H

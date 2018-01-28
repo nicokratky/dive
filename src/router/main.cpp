@@ -105,7 +105,7 @@ int main(int argc, char** argv) {
 
     asio::io_context io_context;
 
-    Router router{id, ip_address, port, io_context};
+    Router router{id, ip_address, port, io_context, std::chrono::seconds(5)};
 
     router.initialize_from_json(nodes, links);
 
@@ -116,10 +116,10 @@ int main(int argc, char** argv) {
     router.run();
 
     // for testing purposes only, otherwise router will shutdown
-    for (;;) {
-        logger->trace("Waiting for nothing...");
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-    }
+    /* for (;;) { */
+    /*     logger->trace("Waiting for nothing..."); */
+    /*     std::this_thread::sleep_for(std::chrono::seconds(5)); */
+    /* } */
 
     google::protobuf::ShutdownProtobufLibrary();
 }

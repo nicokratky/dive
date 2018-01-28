@@ -40,14 +40,16 @@ using json = nlohmann::json;
 using asio::ip::tcp;
 
 Router::Router(const std::string& router_id, const std::string& ip_address,
-               unsigned short port, asio::io_context& io_context) :
+               unsigned short port, asio::io_context& io_context,
+               std::chrono::seconds interval) :
     logger_{spdlog::stdout_color_mt("Router")},
     router_id_{router_id},
     ip_address_{ip_address},
     port_{port},
     io_context_{io_context},
     server_{io_context_, port_},
-    client_{io_context_} {
+    client_{io_context_},
+    interval_{interval} {
 }
 
 
@@ -103,7 +105,10 @@ void Router::run() {
     std::thread update_thread{&Router::receive_updates, this};
     update_thread.detach();
 
-    update_neighbours();
+    for (;;) {
+        update_neighbours();
+        std::this_thread::sleep_for(interval_);
+    }
 }
 
 
@@ -141,7 +146,7 @@ std::string Router::pack_distance_vector() {
 
     dv.set_router_id(router_id_);
 
-    for (const auto& node: distance_vector_) {
+    for (const auto& node : distance_vector_) {
         dive::DistanceVector::Distance* d{dv.add_distance_vector()};
 
         d->set_router_id(node.first);

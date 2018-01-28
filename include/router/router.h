@@ -19,6 +19,7 @@
 #include <map>
 #include <string>
 #include <memory>
+#include <chrono>
 
 /*
  * Vendor header files
@@ -71,7 +72,8 @@ struct Link {
 class Router {
   public:
     Router(const std::string& router_id, const std::string& ip_address,
-           unsigned short port, asio::io_context& io_context);
+           unsigned short port, asio::io_context& io_context,
+           std::chrono::seconds interval);
     ~Router();
 
     /*!
@@ -143,6 +145,8 @@ class Router {
     asio::io_context& io_context_;
     Server server_;
     Client client_;
+
+    std::chrono::seconds interval_;
 };
 
 #endif  // DIVE_ROUTER_ROUTER_H
