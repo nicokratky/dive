@@ -77,14 +77,6 @@ class Router {
     ~Router();
 
     /*!
-    * \brief Set the cost that it takes to reach a router
-    *
-    * \param router_id
-    * \param cost
-    */
-    void set_cost(const std::string& router_id, int cost);
-
-    /*!
     * \brief Initialize the distance vector from a json file
     *
     * \param nodes

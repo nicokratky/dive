@@ -57,11 +57,6 @@ Router::~Router() {
 }
 
 
-void Router::set_cost(const std::string& router_id, int cost) {
-    distance_vector_[router_id] = cost;
-}
-
-
 void Router::initialize_from_json(json nodes, json links) {
     // Loop through all nodes and store there connection informations
     for (json::iterator it = nodes.begin(); it != nodes.end(); ++it) {
