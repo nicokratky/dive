@@ -109,8 +109,6 @@ int main(int argc, char** argv) {
 
     router.initialize_from_json(nodes, links);
 
-    std::cout << router << std::endl;
-
     logger->info("Router initialized");
 
     router.run();
