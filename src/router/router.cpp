@@ -186,21 +186,25 @@ std::ostream& operator<<(std::ostream& os, const Router& r) {
                       r.ip_address_,
                       r.port_) << std::endl;;
 
-    for (const auto& node : r.distance_vector_) {
-        os << fmt::format("{:<5}", node.first);
-    }
-    os << std::endl;
+    os << fmt::format("+{:-^10}+{:-^10}+\n", "-", "-");
+    os << fmt::format("|{:^10}|{:^10}|\n", "Node", "Cost");
+    os << fmt::format("+{:-^10}+{:-^10}+\n", "-", "-");
 
     for (const auto& node : r.distance_vector_) {
-        os << fmt::format("{:<5}", node.second);
+        os << fmt::format("|{:^10}|{:^ 10}|\n", node.first, node.second);
     }
-    os << std::endl << std::endl;
+    os << fmt::format("+{:-^10}+{:-^10}+\n", "-", "-");
 
-    os << "Next Hop" << std::endl;
+    os << fmt::format("+{:-^10}+{:-^10}+\n", "-", "-");
+    os << fmt::format("|{:^10}|{:^10}|\n", "Node", "Next Hop");
+    os << fmt::format("+{:-^10}+{:-^10}+\n", "-", "-");
+
     for (const auto& link : r.links_) {
-        os << fmt::format("{:5}: {}", link.first,
-                                      link.second.next_hop) << std::endl;
+        os << fmt::format("|{:^10}|{:^10}|\n", link.first,
+                                                link.second.next_hop);
     }
+    os << fmt::format("+{:-^10}+{:-^10}+\n", "-", "-");
+
 
     return os;
 }

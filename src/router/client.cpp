@@ -58,6 +58,8 @@ std::size_t Client::send_to(const std::string& ip_address, unsigned short port,
     sent += asio::write(sock, asio::buffer(&prefix, sizeof(prefix)), ec);
     sent += asio::write(sock, asio::buffer(message), ec);
 
+    logger_->trace("Message sent");
+
     sock.close();
 
     return sent;

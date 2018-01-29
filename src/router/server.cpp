@@ -66,7 +66,12 @@ dive::DistanceVector Server::receive() {
     logger_->trace("Done reading");
 
     dive::DistanceVector dv;
-    dv.ParseFromString(message);
+
+    if (dv.ParseFromString(message)) {
+        logger_->trace("Distance vector parsed successfully");
+    } else {
+        logger_->error("Distance vector could not be parsed");
+    }
 
     sock.close();
 
