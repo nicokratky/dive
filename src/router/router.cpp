@@ -88,14 +88,14 @@ void Router::initialize_from_json(json nodes, json links) {
 
             distance_vector_[target] = 1;
 
-            links_[target].next_hop = router_id_;
+            links_[target].next_hop = target;
         } else if (link["target"] == router_id_) {
             // link is a neighbour
             target = link["source"].get<std::string>();
 
             distance_vector_[target] = 1;
 
-            links_[target].next_hop = router_id_;
+            links_[target].next_hop = target;
         }
     }
 }
@@ -106,6 +106,7 @@ void Router::run() {
     update_thread.detach();
 
     for (;;) {
+        std::cout << *this << std::endl;
         update_neighbours();
         std::this_thread::sleep_for(interval_);
     }
@@ -162,7 +163,25 @@ std::string Router::pack_distance_vector() {
 
 
 void Router::update_distance_vector(dive::DistanceVector update) {
-    logger_->info("Got update from {}", update.router_id());
+    std::string sender{update.router_id()};
+    logger_->info("Got update from {}", sender);
+
+    for (const auto& node : update.distance_vector()) {
+        std::string node_id{node.router_id()};
+        if (node_id != sender && node_id != router_id_) {
+            logger_->trace("Processing node {} in update from {}", node_id,
+                                                                   sender);
+            if (node.distance() > 0) {
+                int current_cost{distance_vector_[node_id]};
+                int new_cost{node.distance() + 1};
+
+                if (current_cost < 0 || new_cost < current_cost) {
+                    distance_vector_[node_id] = new_cost;
+                    links_[node_id].next_hop = sender;
+                }
+            }
+        }
+    }
 }
 
 
@@ -182,6 +201,7 @@ std::ostream& operator<<(std::ostream& os, const Router& r) {
     }
     os << std::endl << std::endl;
 
+    os << "Next Hop" << std::endl;
     for (const auto& link : r.links_) {
         os << fmt::format("{:5}: {}", link.first,
                                       link.second.next_hop) << std::endl;
