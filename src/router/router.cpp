@@ -19,6 +19,7 @@
 #include <memory>
 #include <thread>
 #include <chrono>
+#include <mutex>
 
 /*
  * Vendor header files
@@ -142,11 +143,15 @@ std::string Router::pack_distance_vector() {
 
     dv.set_router_id(router_id_);
 
-    for (const auto& node : distance_vector_) {
-        dive::DistanceVector::Distance* d{dv.add_distance_vector()};
+    {
+        std::unique_lock<std::mutex> lck{mtx_};
 
-        d->set_router_id(node.first);
-        d->set_distance(node.second);
+        for (const auto& node : distance_vector_) {
+            dive::DistanceVector::Distance* d{dv.add_distance_vector()};
+
+            d->set_router_id(node.first);
+            d->set_distance(node.second);
+        }
     }
 
     std::string container;
@@ -167,6 +172,8 @@ void Router::update_distance_vector(dive::DistanceVector update) {
             logger_->trace("Processing node {} in update from {}", node_id,
                                                                    sender);
             if (node.distance() > 0) {
+                std::unique_lock<std::mutex> lck{mtx_};
+
                 int current_cost{distance_vector_[node_id]};
                 int new_cost{node.distance() + 1};
 

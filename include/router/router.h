@@ -20,6 +20,7 @@
 #include <string>
 #include <memory>
 #include <chrono>
+#include <mutex>
 
 /*
  * Vendor header files
@@ -139,6 +140,8 @@ class Router {
     Client client_;
 
     std::chrono::seconds interval_;
+
+    std::mutex mtx_;
 };
 
 #endif  // DIVE_ROUTER_ROUTER_H
