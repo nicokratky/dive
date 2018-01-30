@@ -47,8 +47,6 @@ dive::DistanceVector Server::receive() {
 
     asio::error_code ec;
 
-    std::size_t read;
-
     uint32_t length;
     asio::read(sock, asio::buffer(&length, sizeof(length)),
                asio::transfer_exactly(sizeof(length)), ec);
