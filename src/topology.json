@@ -28,38 +28,31 @@
     "links": [
         {
             "source": "A",
-            "target": "D",
-            "cost": 1
+            "target": "D"
         },
         {
             "source": "A",
-            "target": "B",
-            "cost": 1
+            "target": "B"
         },
         {
             "source": "A",
-            "target": "F",
-            "cost": 1
+            "target": "F"
         },
         {
             "source": "B",
-            "target": "C",
-            "cost": 1
+            "target": "C"
         },
         {
             "source": "C",
-            "target": "F",
-            "cost": 1
+            "target": "F"
         },
         {
             "source": "C",
-            "target": "E",
-            "cost": 1
+            "target": "E"
         },
         {
             "source": "F",
-            "target": "E",
-            "cost": 1
+            "target": "E"
         }
     ]
 }
