@@ -44,7 +44,7 @@ class Server {
      *
      * \return parsed protobuf object
      */
-    dive::DistanceVector receive();
+    dive::Message receive();
 
   private:
     std::shared_ptr<spdlog::logger> logger_;

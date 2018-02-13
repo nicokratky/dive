@@ -40,7 +40,7 @@ Server::Server(asio::io_context& io_context, unsigned short port) :
 {}
 
 
-dive::DistanceVector Server::receive() {
+dive::Message Server::receive() {
     tcp::socket sock{io_context_};
     acceptor_.accept(sock);
     logger_->debug("Somebody connected");
@@ -63,9 +63,9 @@ dive::DistanceVector Server::receive() {
 
     logger_->trace("Done reading");
 
-    dive::DistanceVector dv;
+    dive::Message msg;
 
-    if (dv.ParseFromString(message)) {
+    if (msg.ParseFromString(message)) {
         logger_->trace("Distance vector parsed successfully");
     } else {
         logger_->error("Distance vector could not be parsed");
@@ -73,5 +73,5 @@ dive::DistanceVector Server::receive() {
 
     sock.close();
 
-    return dv;
+    return msg;
 }
