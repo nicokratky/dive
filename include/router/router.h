@@ -29,7 +29,7 @@
 
 #include "spdlog/spdlog.h"
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 
 #include "dive.pb.h"
 
@@ -48,6 +48,11 @@ struct Link {
      *        destination.
      */
     std::string next_hop;
+
+    /*!
+     * \brief last update received from this link
+     */
+    std::chrono::seconds timestamp;
 
     /*!
      * \brief Default constructor
@@ -124,6 +129,10 @@ class Router {
      */
     void update_distance_vector(dive::DistanceVector update);
 
+    void update_timestamp(std::string router_id);
+
+    void send_heartbeats();
+
     std::shared_ptr<spdlog::logger> logger_;
 
     std::string router_id_;
@@ -140,6 +149,7 @@ class Router {
     Client client_;
 
     std::chrono::seconds interval_;
+    std::chrono::seconds heartbeat_interval_;
 
     std::mutex mtx_;
 };

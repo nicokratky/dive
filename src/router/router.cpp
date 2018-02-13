@@ -30,7 +30,7 @@
 
 #include "fmt/format.h"
 
-#include "json.hpp"
+#include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
 #include "dive.pb.h"
@@ -50,7 +50,8 @@ Router::Router(const std::string& router_id, const std::string& ip_address,
     io_context_{io_context},
     server_{io_context_, port_},
     client_{io_context_},
-    interval_{interval} {
+    interval_{interval},
+    heartbeat_interval_{1}{
 }
 
 
@@ -98,6 +99,9 @@ void Router::initialize_from_json(json nodes, json links) {
 
 
 void Router::run() {
+    std::thread heartbeat_thread{&Router::send_heartbeats, this};
+    heartbeat_thread.detach();
+
     std::thread update_thread{&Router::receive_updates, this};
     update_thread.detach();
 
@@ -131,23 +135,28 @@ void Router::update_neighbours() {
 void Router::receive_updates() {
     for (;;) {
         logger_->info("Waiting for update");
-        dive::DistanceVector update{server_.receive()};
+        dive::Message update{server_.receive()};
 
-        update_distance_vector(update);
+        if (update.has_dv()) {
+            update_distance_vector(update.dv());
+        } else if (update.has_hb()) {
+            update_timestamp(update.hb().router_id());
+        }
     }
 }
 
 
 std::string Router::pack_distance_vector() {
-    dive::DistanceVector dv;
+    dive::Message message;
+    dive::DistanceVector* dv{message.mutable_dv()};
 
-    dv.set_router_id(router_id_);
+    dv->set_router_id(router_id_);
 
     {
         std::unique_lock<std::mutex> lck{mtx_};
 
         for (const auto& node : distance_vector_) {
-            dive::DistanceVector::Distance* d{dv.add_distance_vector()};
+            dive::DistanceVector::Distance* d{dv->add_distance_vector()};
 
             d->set_router_id(node.first);
             d->set_distance(node.second);
@@ -156,7 +165,7 @@ std::string Router::pack_distance_vector() {
 
     std::string container;
 
-    dv.SerializeToString(&container);
+    message.SerializeToString(&container);
 
     return container;
 }
@@ -183,6 +192,40 @@ void Router::update_distance_vector(dive::DistanceVector update) {
                 }
             }
         }
+    }
+}
+
+
+void Router::update_timestamp(std::string router_id) {
+    logger_->info("Got heartbeat from {}", router_id);
+    if (links_.count(router_id) > 1) {
+        links_[router_id].timestamp =
+            std::chrono::duration_cast<std::chrono::seconds>(
+                std::chrono::system_clock::now().time_since_epoch()
+            );
+    }
+}
+
+
+void Router::send_heartbeats() {
+    dive::Message message;
+    dive::Heartbeat* hb{message.mutable_hb()};
+
+    hb->set_router_id(router_id_);
+
+    std::string container;
+    message.SerializeToString(&container);
+
+    for (;;) {
+        for (const auto& node : links_) {
+            logger_->trace("Sending heartbeat to {}", node.first);
+
+            client_.send_to(node.second.ip_address,
+                            node.second.port,
+                            container);
+        }
+
+        std::this_thread::sleep_for(heartbeat_interval_);
     }
 }
 
