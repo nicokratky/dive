@@ -9,18 +9,18 @@ add_definitions(-DASIO_STANDALONE)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR
     "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-  add_definitions(-pedantic -Wall -Wextra)  # according to GSL
+    add_definitions(-pedantic -Wall -Wextra -Wno-extended-offsetof)  # according to GSL
   # add_definitions(-Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion)
   # add_definitions(-Wl,--no-as-needed)  # needed for building on buggy configurations
 else()  # currently not maintained any more:
-  add_definitions(-DASIO_HAS_STD_ADDRESSOF)
-  add_definitions(-DASIO_HAS_STD_ARRAY)
-  add_definitions(-DASIO_HAS_CSTDINT)
-  add_definitions(-DASIO_HAS_STD_SHARED_PTR)
-  add_definitions(-DASIO_HAS_STD_TYPE_TRAITS)
-  add_definitions(-DASIO_HAS_STD_ATOMIC)
-  add_definitions(-D_WIN32_WINNT=0x0501)
-  add_definitions(/Wall /EHsc)
+    add_definitions(-DASIO_HAS_STD_ADDRESSOF)
+    add_definitions(-DASIO_HAS_STD_ARRAY)
+    add_definitions(-DASIO_HAS_CSTDINT)
+    add_definitions(-DASIO_HAS_STD_SHARED_PTR)
+    add_definitions(-DASIO_HAS_STD_TYPE_TRAITS)
+    add_definitions(-DASIO_HAS_STD_ATOMIC)
+    add_definitions(-D_WIN32_WINNT=0x0501)
+    add_definitions(/Wall /EHsc)
 endif()
 
 # important: Don't forget to set the environment variables accordingly (if needed)!
