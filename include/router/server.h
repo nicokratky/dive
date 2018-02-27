@@ -9,33 +9,30 @@
  * class: 5cHIF
  */
 
-/*
- * C system files
- */
-#include <cstdint>
+#ifndef DIVE_ROUTER_SERVER_H
+#define DIVE_ROUTER_SERVER_H
 
-/*
- * C++ system files
- */
+#include <cstdint>
 #include <string>
 #include <memory>
 
-/*
- * Vendor header files
- */
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
 
 #include "dive.pb.h"
 
-#ifndef ROUTER_SERVER_H
-#define ROUTER_SERVER_H
 
 /*!
  * \brief TCP server, can only receive messages
  */
 class Server {
   public:
+    /*!
+     * \brief Constructor
+     *
+     * \param io_context    Reference to asio::io_context object
+     * \param port          Port to which the server will bind to
+     */
     Server(asio::io_context& io_context, unsigned short port);
 
     /*!
@@ -53,4 +50,4 @@ class Server {
     asio::ip::tcp::acceptor acceptor_;
 };
 
-#endif  // ROUTER_SERVER_h
+#endif  // DIVE_ROUTER_SERVER_h

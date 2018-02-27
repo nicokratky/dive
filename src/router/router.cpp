@@ -45,10 +45,6 @@ Router::Router(const std::string& router_id, const std::string& ip_address,
 }
 
 
-Router::~Router() {
-}
-
-
 void Router::initialize_from_json(json nodes, json links) {
     // Loop through all nodes and store there connection informations
     for (json::iterator it = nodes.begin(); it != nodes.end(); ++it) {

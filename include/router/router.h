@@ -40,8 +40,16 @@ struct Link {
      */
     std::string next_hop;
 
+    /*!
+     * \brief Link state
+     * If set to false, link is treated as if it is down
+     */
     bool up{true};
 
+    /*!
+     * \brief Probalitiy of Failure
+     * Any number between 0 and 1 is allowed
+     */
     float pof{0};
 
     /*!
@@ -67,10 +75,18 @@ struct Link {
  */
 class Router {
   public:
+    /*!
+     * \brief Constructor
+     *
+     * \param router_id     Router ID
+     * \param ip_address    IP Address which the router will bind to
+     * \param port          Port to which the router will bind to
+     * \param io_context    Reference to asio::io_context object
+     * \param interval      Time in seconds between each router update
+     */
     Router(const std::string& router_id, const std::string& ip_address,
            unsigned short port, asio::io_context& io_context,
            std::chrono::seconds interval);
-    ~Router();
 
     /*!
     * \brief Initialize the distance vector from a json file
@@ -112,6 +128,14 @@ class Router {
      */
     std::string pack_distance_vector();
 
+    /*!
+     * \brief Create a Protobuf object from a control message
+     * Object will also be serialized
+     *
+     * \param data Message that will be put into Protobuf object
+     *
+     * \return serialized control message
+     */
     std::string pack_control_message(const std::string& data);
 
     /*!
@@ -121,11 +145,21 @@ class Router {
      */
     void update_distance_vector(dive::DistanceVector update);
 
+    /*!
+     * \brief Handle a received control message
+     *
+     * \param message Protobuf object
+     */
     void handle_control_message(dive::ControlMessage message);
 
+    /*!
+     * \brief Simulate the possibility of a outage
+     * After 20 seconds it is decided if the connection fails and the partner
+     * on the other end is notified in the event of failure.
+     */
     void simulate_outage();
 
-    static const int kInfinity{-1};
+    static constexpr int kInfinity{-1};
 
     std::shared_ptr<spdlog::logger> logger_;
 

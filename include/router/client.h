@@ -9,8 +9,8 @@
  * class: 5cHIF
  */
 
-#ifndef ROUTER_CLIENT_H
-#define ROUTER_CLIENT_H
+#ifndef DIVE_ROUTER_CLIENT_H
+#define DIVE_ROUTER_CLIENT_H
 
 #include <cstdint>
 #include <string>
@@ -25,6 +25,11 @@
  */
 class Client {
   public:
+    /*!
+     * \brief Constructor
+     *
+     * \param io_context reference to asio::io_context object
+     */
     Client(asio::io_context& io_context);
 
     /*!
@@ -68,4 +73,4 @@ class Client {
     asio::ip::tcp::resolver resolver_;
 };
 
-#endif  // ROUTER_CLIENT_H
+#endif  // DIVE_ROUTER_CLIENT_H
