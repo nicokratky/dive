@@ -48,8 +48,7 @@ int main(int argc, char** argv) {
         clipp::value("router id", id),
         clipp::option("-i", "--interval")
             .doc("router update interval (default: " + std::to_string(interval)
-                 + ")") & clipp::value("seconds", interval)
-    );
+                 + ")") & clipp::value("seconds", interval));
 
     if (!clipp::parse(argc, argv, cli)) {
         std::cout << clipp::make_man_page(cli, argv[0]);
