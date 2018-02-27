@@ -13,13 +13,15 @@ message DistanceVector {
     repeated Distance distance_vector = 2;
 }
 
-message Heartbeat {
+message ControlMessage {
     string router_id = 1;
+
+    string data = 2;
 }
 
 message Message {
     oneof Data {
         DistanceVector dv = 1;
-        Heartbeat hb = 2;
+        ControlMessage cm = 2;
     }
 }

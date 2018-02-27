@@ -12,9 +12,7 @@
 #ifndef DIVE_ROUTER_ROUTER_H
 #define DIVE_ROUTER_ROUTER_H
 
-/*
- * C++ system files
- */
+// C++ system files
 #include <iostream>
 #include <map>
 #include <string>
@@ -22,17 +20,13 @@
 #include <chrono>
 #include <mutex>
 
-/*
- * Vendor header files
- */
+// Vendor header files
 #include "asio.hpp"
-
 #include "spdlog/spdlog.h"
-
 #include "nlohmann/json.hpp"
-
 #include "dive.pb.h"
 
+// Project include files
 #include "server.h"
 #include "client.h"
 
@@ -49,10 +43,9 @@ struct Link {
      */
     std::string next_hop;
 
-    /*!
-     * \brief last update received from this link
-     */
-    std::chrono::seconds timestamp;
+    bool up{true};
+
+    float pof{0};
 
     /*!
      * \brief Default constructor
@@ -122,6 +115,8 @@ class Router {
      */
     std::string pack_distance_vector();
 
+    std::string pack_control_message(const std::string& data);
+
     /*!
      * \brief Send the current distance vector to all direct neighbours
      *
@@ -129,9 +124,11 @@ class Router {
      */
     void update_distance_vector(dive::DistanceVector update);
 
-    void update_timestamp(std::string router_id);
+    void handle_control_message(dive::ControlMessage message);
 
-    void send_heartbeats();
+    void simulate_outage();
+
+    static const int kInfinity{-1};
 
     std::shared_ptr<spdlog::logger> logger_;
 
@@ -149,7 +146,6 @@ class Router {
     Client client_;
 
     std::chrono::seconds interval_;
-    std::chrono::seconds heartbeat_interval_;
 
     std::mutex mtx_;
 };

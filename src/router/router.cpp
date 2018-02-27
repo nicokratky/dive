@@ -20,6 +20,7 @@
 #include <thread>
 #include <chrono>
 #include <mutex>
+#include <random>
 
 /*
  * Vendor header files
@@ -50,8 +51,7 @@ Router::Router(const std::string& router_id, const std::string& ip_address,
     io_context_{io_context},
     server_{io_context_, port_},
     client_{io_context_},
-    interval_{interval},
-    heartbeat_interval_{1}{
+    interval_{interval} {
 }
 
 
@@ -65,7 +65,7 @@ void Router::initialize_from_json(json nodes, json links) {
         if (it.key() == router_id_) {
             distance_vector_[router_id_] = 0;
         } else {
-            distance_vector_[it.key()] = -1;
+            distance_vector_[it.key()] = kInfinity;
 
             std::string ip_address{
                 nodes[it.key()]["ip_address"].get<std::string>()};
@@ -86,6 +86,10 @@ void Router::initialize_from_json(json nodes, json links) {
             distance_vector_[target] = 1;
 
             links_[target].next_hop = target;
+
+            if (link.find("pof") != link.end()) {
+                links_[target].pof = link["pof"];
+            }
         } else if (link["target"] == router_id_) {
             // link is a neighbour
             target = link["source"].get<std::string>();
@@ -99,11 +103,11 @@ void Router::initialize_from_json(json nodes, json links) {
 
 
 void Router::run() {
-    std::thread heartbeat_thread{&Router::send_heartbeats, this};
-    heartbeat_thread.detach();
-
     std::thread update_thread{&Router::receive_updates, this};
     update_thread.detach();
+
+    std::thread outage_thread{&Router::simulate_outage, this};
+    outage_thread.detach();
 
     for (;;) {
         std::cout << *this << std::endl;
@@ -114,13 +118,11 @@ void Router::run() {
 
 
 void Router::update_neighbours() {
-    asio::error_code ec;
-
     std::string distance_vector_update{pack_distance_vector()};
 
     for (const auto& node : distance_vector_) {
         // only update node if it is a direct neighbour
-        if (node.second != 1)
+        if (node.second != 1 || !links_[node.first].up)
             continue;
 
         logger_->info("Sending update to {}", node.first);
@@ -139,8 +141,8 @@ void Router::receive_updates() {
 
         if (update.has_dv()) {
             update_distance_vector(update.dv());
-        } else if (update.has_hb()) {
-            update_timestamp(update.hb().router_id());
+        } else if (update.has_cm()) {
+            handle_control_message(update.cm());
         }
     }
 }
@@ -171,6 +173,21 @@ std::string Router::pack_distance_vector() {
 }
 
 
+std::string Router::pack_control_message(const std::string& data) {
+    dive::Message message;
+    dive::ControlMessage* cm{message.mutable_cm()};
+
+    cm->set_router_id(router_id_);
+    cm->set_data(data);
+
+    std::string container;
+
+    message.SerializeToString(&container);
+
+    return container;
+}
+
+
 void Router::update_distance_vector(dive::DistanceVector update) {
     std::string sender{update.router_id()};
     logger_->info("Got update from {}", sender);
@@ -180,13 +197,14 @@ void Router::update_distance_vector(dive::DistanceVector update) {
         if (node_id != sender && node_id != router_id_) {
             logger_->trace("Processing node {} in update from {}", node_id,
                                                                    sender);
+
             if (node.distance() > 0) {
                 std::unique_lock<std::mutex> lck{mtx_};
 
                 int current_cost{distance_vector_[node_id]};
                 int new_cost{node.distance() + 1};
 
-                if (current_cost < 0 || new_cost < current_cost) {
+                if (current_cost == kInfinity || new_cost < current_cost) {
                     distance_vector_[node_id] = new_cost;
                     links_[node_id].next_hop = sender;
                 }
@@ -196,36 +214,48 @@ void Router::update_distance_vector(dive::DistanceVector update) {
 }
 
 
-void Router::update_timestamp(std::string router_id) {
-    logger_->info("Got heartbeat from {}", router_id);
-    if (links_.count(router_id) > 1) {
-        links_[router_id].timestamp =
-            std::chrono::duration_cast<std::chrono::seconds>(
-                std::chrono::system_clock::now().time_since_epoch()
-            );
+void Router::handle_control_message(dive::ControlMessage message) {
+    std::string router_id{message.router_id()};
+    std::string data{message.data()};
+
+    logger_->info("Got control message from {}: {}", router_id, data);
+
+    if (message.data() == "DOWN") {
+        logger_->debug("Link to {} has gone down", router_id);
+
+        {
+            std::lock_guard<std::mutex> lck{mtx_};
+            links_[router_id].up = false;
+            distance_vector_[router_id] = kInfinity;
+        }
     }
 }
 
 
-void Router::send_heartbeats() {
-    dive::Message message;
-    dive::Heartbeat* hb{message.mutable_hb()};
+void Router::simulate_outage() {
+    std::this_thread::sleep_for(std::chrono::seconds(20));
 
-    hb->set_router_id(router_id_);
+    std::random_device rd;
+    std::mt19937 gen{rd()};
 
-    std::string container;
-    message.SerializeToString(&container);
+    for (const auto& link : links_) {
+        if (link.second.pof != 0) {
+            std::bernoulli_distribution d{link.second.pof};
 
-    for (;;) {
-        for (const auto& node : links_) {
-            logger_->trace("Sending heartbeat to {}", node.first);
+            if (d(gen)) {
+                logger_->debug("Link to {} has gone down", link.first);
 
-            client_.send_to(node.second.ip_address,
-                            node.second.port,
-                            container);
+                {
+                    std::lock_guard<std::mutex> lck{mtx_};
+                    links_[link.first].up = false;
+                    distance_vector_[link.first] = kInfinity;
+                }
+
+                client_.send_to(link.second.ip_address,
+                                link.second.port,
+                                pack_control_message("DOWN"));
+            }
         }
-
-        std::this_thread::sleep_for(heartbeat_interval_);
     }
 }
 

@@ -56,12 +56,19 @@ bool file_exists(const std::string& filename) {
 
 
 int main(int argc, char** argv) {
+    GOOGLE_PROTOBUF_VERIFY_VERSION;
+
     std::string input;
     std::string id;
+    int interval{5};
 
     auto cli = (
         clipp::value("topology file", input),
-        clipp::value("router id", id));
+        clipp::value("router id", id),
+        clipp::option("-i", "--interval")
+            .doc("router update interval (default: " + std::to_string(interval)
+                 + ")") & clipp::value("seconds", interval)
+    );
 
     if (!clipp::parse(argc, argv, cli)) {
         std::cout << clipp::make_man_page(cli, argv[0]);
@@ -81,14 +88,20 @@ int main(int argc, char** argv) {
 
     std::ifstream f{input};
     json j;
-    f >> j;
+
+    try {
+        f >> j;
+    } catch(json::parse_error& e) {
+        logger->critical("Topology file malformed");
+        return 1;
+    }
 
     json nodes{j["nodes"]};
     json links{j["links"]};
 
     // If either no nodes or links are available, abort
     if (nodes.empty() || links.empty()) {
-        logger->error("Topology file malformed.");
+        logger->error("Topology file malformed");
         return 1;
     }
 
@@ -100,24 +113,20 @@ int main(int argc, char** argv) {
     std::cout << fmt::format("Nodes in topology: {}",
                             nodes.size()) << std::endl;
 
+    // extract ip_address and port from topology file
     std::string ip_address{nodes[id]["ip_address"].get<std::string>()};
     unsigned short port{nodes[id]["port"].get<unsigned short>()};
 
     asio::io_context io_context;
 
-    Router router{id, ip_address, port, io_context, std::chrono::seconds(5)};
+    Router router{id, ip_address, port, io_context,
+                  std::chrono::seconds(interval)};
 
     router.initialize_from_json(nodes, links);
 
     logger->info("Router initialized");
 
     router.run();
-
-    // for testing purposes only, otherwise router will shutdown
-    /* for (;;) { */
-    /*     logger->trace("Waiting for nothing..."); */
-    /*     std::this_thread::sleep_for(std::chrono::seconds(5)); */
-    /* } */
 
     google::protobuf::ShutdownProtobufLibrary();
 }

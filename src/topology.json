@@ -40,7 +40,8 @@
         },
         {
             "source": "B",
-            "target": "C"
+            "target": "C",
+            "pof": 0.5
         },
         {
             "source": "C",
