@@ -1,0 +1,42 @@
+{
+    "nodes": {
+        "A": {
+            "ip_address": "127.0.0.1",
+            "port": 16022
+        },
+        "B": {
+            "ip_address": "127.0.0.1",
+            "port": 16023
+        },
+        "C": {
+            "ip_address": "127.0.0.1",
+            "port": 16024
+        },
+        "D": {
+            "ip_address": "127.0.0.1",
+            "port": 16025
+        }
+    },
+    "links": [
+        {
+            "source": "A",
+            "target": "D"
+        },
+        {
+            "source": "A",
+            "target": "B"
+        },
+        {
+            "source": "A",
+            "target": "C"
+        },
+        {
+            "source": "B",
+            "target": "D"
+        },
+        {
+            "source": "C",
+            "target": "D"
+        }
+        ]
+}
