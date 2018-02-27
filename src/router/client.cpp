@@ -11,22 +11,11 @@
 
 #include "client.h"
 
-/*
- * C system files
- */
 #include <cstdint>
-
-/*
- * C++ system files
- */
 #include <string>
 
-/*
- * Vendor header filse
- */
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
-
 
 using asio::ip::tcp;
 

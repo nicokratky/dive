@@ -11,21 +11,11 @@
 
 #include "server.h"
 
-/*
- * C system files
- */
 #include <cstdint>
-
-/*
- * C++ system files
- */
 #include <string>
 #include <thread>
 #include <chrono>
 
-/*
- * Vendor header filse
- */
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
 

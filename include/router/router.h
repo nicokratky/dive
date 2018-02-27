@@ -12,7 +12,6 @@
 #ifndef DIVE_ROUTER_ROUTER_H
 #define DIVE_ROUTER_ROUTER_H
 
-// C++ system files
 #include <iostream>
 #include <map>
 #include <string>
@@ -20,13 +19,11 @@
 #include <chrono>
 #include <mutex>
 
-// Vendor header files
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
 #include "nlohmann/json.hpp"
 #include "dive.pb.h"
 
-// Project include files
 #include "server.h"
 #include "client.h"
 

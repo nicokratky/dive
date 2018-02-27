@@ -11,9 +11,6 @@
  */
 #include "router.h"
 
-/*
- * C++ system files
- */
 #include <iostream>
 #include <string>
 #include <memory>
@@ -22,23 +19,16 @@
 #include <mutex>
 #include <random>
 
-/*
- * Vendor header files
- */
 #include "asio.hpp"
-
 #include "spdlog/spdlog.h"
-
 #include "fmt/format.h"
-
 #include "nlohmann/json.hpp"
-using json = nlohmann::json;
 
 #include "dive.pb.h"
-
 #include "server.h"
 #include "client.h"
 
+using json = nlohmann::json;
 using asio::ip::tcp;
 
 Router::Router(const std::string& router_id, const std::string& ip_address,

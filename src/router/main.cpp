@@ -9,40 +9,21 @@
  * class: 5cHIF
  */
 
-/*
- * C system files
- */
-#include <sys/stat.h>  // stat
-
-/*
- * C++ system files
- */
+#include <sys/stat.h>
 #include <iostream>
-#include <fstream>  // ifstream
+#include <fstream>
 #include <map>
 #include <string>
 
-/*
- * Vendor header files
- */
 #include "asio.hpp"
-
 #include "spdlog/spdlog.h"
-
 #include "fmt/format.h"
-
 #include "nlohmann/json.hpp"
-using json = nlohmann::json;
-
 #include "clipp.h"
 
-/*
- * DiVe header files
- */
 #include "router.h"
 
-// used by the protobuf example below:
-// #include "person.pb.h"
+using json = nlohmann::json;
 
 /*!
  * \brief Check if a file exists

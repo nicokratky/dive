@@ -12,20 +12,10 @@
 #ifndef ROUTER_CLIENT_H
 #define ROUTER_CLIENT_H
 
-/*
- * C system files
- */
 #include <cstdint>
-
-/*
- * C++ system files
- */
 #include <string>
 #include <memory>
 
-/*
- * Vendor header files
- */
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
 
