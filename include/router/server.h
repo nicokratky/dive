@@ -35,6 +35,8 @@ class Server {
      */
     Server(asio::io_context& io_context, unsigned short port);
 
+    ~Server();
+
     /*!
      * \brief Receive a distance vector from a neighbor
      * Message is parsed to a protobuf object

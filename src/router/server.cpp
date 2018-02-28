@@ -30,6 +30,11 @@ Server::Server(asio::io_context& io_context, unsigned short port) :
 {}
 
 
+Server::~Server() {
+    acceptor_.close();
+}
+
+
 dive::Message Server::receive() {
     tcp::socket sock{io_context_};
     acceptor_.accept(sock);
