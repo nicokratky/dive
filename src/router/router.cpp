@@ -88,7 +88,7 @@ void Router::initialize_from_json(json nodes, json links) {
 }
 
 
-void Router::run() {
+void Router::start() {
     std::thread update_thread{&Router::receive_updates, this};
     update_thread.detach();
 

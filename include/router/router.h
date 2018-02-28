@@ -100,7 +100,7 @@ class Router {
      * \brief "Boot" the router
      * starts sending routing table updates and listening for updates
      */
-    void run();
+    void start();
 
     /*!
     * \brief Overloaded << operator
