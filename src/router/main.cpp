@@ -9,11 +9,13 @@
  * class: 5cHIF
  */
 
+#include <csignal>
 #include <sys/stat.h>
 #include <iostream>
 #include <fstream>
 #include <map>
 #include <string>
+#include <thread>
 
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
@@ -37,6 +39,8 @@ bool file_exists(const std::string& filename) {
 
 
 int main(int argc, char** argv) {
+
+
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     std::string input;
@@ -57,6 +61,21 @@ int main(int argc, char** argv) {
 
     auto logger = spdlog::stdout_color_mt("logger");
     spdlog::set_level(spdlog::level::trace);
+
+    std::thread{[&]() {
+        ::sigset_t sigset;
+        sigemptyset(&sigset);
+        sigaddset(&sigset, SIGTERM);
+        sigaddset(&sigset, SIGINT);
+        sigprocmask(SIG_BLOCK, &sigset, nullptr);
+        int sig;
+        sigwait(&sigset, &sig);
+
+        logger->info("Bye!");
+        google::protobuf::ShutdownProtobufLibrary();
+
+        std::exit(0);
+    }}.detach();
 
     logger->debug("Topology file: {}", input);
     logger->debug("Router ID: {}", id);
@@ -107,7 +126,5 @@ int main(int argc, char** argv) {
 
     logger->info("Router initialized");
 
-    router.run();
-
-    google::protobuf::ShutdownProtobufLibrary();
+    router.start();
 }
