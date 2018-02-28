@@ -27,7 +27,7 @@ Client::Client(asio::io_context& io_context) :
 
 
 std::size_t Client::send_to(const std::string& ip_address, unsigned short port,
-                    const std::string& message) {
+                            const std::string& message) {
     logger_->debug("Sending message to {}:{}", ip_address, port);
 
     tcp::resolver::results_type endpoints{
@@ -47,7 +47,7 @@ std::size_t Client::send_to(const std::string& ip_address, unsigned short port,
     sent += asio::write(sock, asio::buffer(&prefix, sizeof(prefix)), ec);
     sent += asio::write(sock, asio::buffer(message), ec);
 
-    logger_->trace("Message sent");
+    logger_->info("Message sent");
 
     sock.close();
 
@@ -56,7 +56,7 @@ std::size_t Client::send_to(const std::string& ip_address, unsigned short port,
 
 
 void Client::connect(asio::ip::tcp::socket& sock,
-             asio::ip::tcp::resolver::results_type& endpoints) {
+                     asio::ip::tcp::resolver::results_type& endpoints) {
     bool connected{false};
     asio::error_code ec;
 

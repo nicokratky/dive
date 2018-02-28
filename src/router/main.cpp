@@ -72,7 +72,8 @@ int main(int argc, char** argv) {
     try {
         f >> j;
     } catch(json::parse_error& e) {
-        logger->critical("Topology file malformed");
+        logger->error("Topology file malformed");
+        logger->error("File could not be parsed");
         return 1;
     }
 
@@ -82,6 +83,7 @@ int main(int argc, char** argv) {
     // If either no nodes or links are available, abort
     if (nodes.empty() || links.empty()) {
         logger->error("Topology file malformed");
+        logger->error("Nodes or links are missing");
         return 1;
     }
 
@@ -90,8 +92,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::cout << fmt::format("Nodes in topology: {}",
-                            nodes.size()) << std::endl;
+    logger->info("Nodes in topology: {}", nodes.size());
 
     // extract ip_address and port from topology file
     std::string ip_address{nodes[id]["ip_address"].get<std::string>()};
