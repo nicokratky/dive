@@ -95,8 +95,11 @@ void Router::run() {
     std::thread outage_thread{&Router::simulate_outage, this};
     outage_thread.detach();
 
-    for (;;) {
+    for (int i{0};; ++i) {
+        std::cout << fmt::format("Distance vector after {} iterations:", i)
+                  << std::endl;
         std::cout << *this << std::endl;
+
         update_neighbours();
         std::this_thread::sleep_for(interval_);
     }
@@ -108,6 +111,7 @@ void Router::update_neighbours() {
 
     for (const auto& node : distance_vector_) {
         // only update node if it is a direct neighbour
+        // link has to be up
         if (node.second != 1 || !links_[node.first].up)
             continue;
 
@@ -141,7 +145,7 @@ std::string Router::pack_distance_vector() {
     dv->set_router_id(router_id_);
 
     {
-        std::unique_lock<std::mutex> lck{mtx_};
+        std::lock_guard<std::mutex> lck{dv_mtx_};
 
         for (const auto& node : distance_vector_) {
             dive::DistanceVector::Distance* d{dv->add_distance_vector()};
@@ -178,6 +182,8 @@ void Router::update_distance_vector(dive::DistanceVector update) {
     std::string sender{update.router_id()};
     logger_->info("Got update from {}", sender);
 
+    std::lock_guard<std::mutex> lck{mtx_};
+
     for (const auto& node : update.distance_vector()) {
         std::string node_id{node.router_id()};
         if (node_id != sender && node_id != router_id_) {
@@ -185,8 +191,6 @@ void Router::update_distance_vector(dive::DistanceVector update) {
                                                                    sender);
 
             if (node.distance() > 0) {
-                std::unique_lock<std::mutex> lck{mtx_};
-
                 int current_cost{distance_vector_[node_id]};
                 int new_cost{node.distance() + 1};
 
@@ -210,7 +214,11 @@ void Router::handle_control_message(dive::ControlMessage message) {
         logger_->debug("Link to {} has gone down", router_id);
 
         {
-            std::lock_guard<std::mutex> lck{mtx_};
+            // lock both mutexes at the same time
+            std::unique_lock<std::mutex> lck1{dv_mtx_, std::defer_lock};
+            std::unique_lock<std::mutex} lck2{link_mtx_, std::defer_lock};
+            std::lock(lck1, lck2);
+
             links_[router_id].up = false;
             distance_vector_[router_id] = kInfinity;
         }
@@ -232,7 +240,13 @@ void Router::simulate_outage() {
                 logger_->debug("Link to {} has gone down", link.first);
 
                 {
-                    std::lock_guard<std::mutex> lck{mtx_};
+                    // lock both mutexes at the same time
+                    std::unique_lock<std::mutex> lck1{dv_mtx_,
+                                                      std::defer_lock};
+                    std::unique_lock<std::mutex} lck2{link_mtx_,
+                                                      std::defer_lock};
+                    std::lock(lck1, lck2);
+
                     links_[link.first].up = false;
                     distance_vector_[link.first] = kInfinity;
                 }

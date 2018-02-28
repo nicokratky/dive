@@ -178,7 +178,8 @@ class Router {
 
     std::chrono::seconds interval_;
 
-    std::mutex mtx_;
+    std::mutex link_mtx_;
+    std::mutex dv_mtx_;
 };
 
 #endif  // DIVE_ROUTER_ROUTER_H
