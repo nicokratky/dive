@@ -182,7 +182,7 @@ void Router::update_distance_vector(dive::DistanceVector update) {
     std::string sender{update.router_id()};
     logger_->info("Got update from {}", sender);
 
-    std::lock_guard<std::mutex> lck{mtx_};
+    std::lock_guard<std::mutex> lck{dv_mtx_};
 
     for (const auto& node : update.distance_vector()) {
         std::string node_id{node.router_id()};
@@ -216,7 +216,7 @@ void Router::handle_control_message(dive::ControlMessage message) {
         {
             // lock both mutexes at the same time
             std::unique_lock<std::mutex> lck1{dv_mtx_, std::defer_lock};
-            std::unique_lock<std::mutex} lck2{link_mtx_, std::defer_lock};
+            std::unique_lock<std::mutex> lck2{link_mtx_, std::defer_lock};
             std::lock(lck1, lck2);
 
             links_[router_id].up = false;
@@ -243,7 +243,7 @@ void Router::simulate_outage() {
                     // lock both mutexes at the same time
                     std::unique_lock<std::mutex> lck1{dv_mtx_,
                                                       std::defer_lock};
-                    std::unique_lock<std::mutex} lck2{link_mtx_,
+                    std::unique_lock<std::mutex> lck2{link_mtx_,
                                                       std::defer_lock};
                     std::lock(lck1, lck2);
 
