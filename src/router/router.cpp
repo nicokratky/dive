@@ -28,7 +28,7 @@
 #include "server.h"
 #include "client.h"
 
-using json = nlohmann::json;
+using nlohmann::json;
 using asio::ip::tcp;
 
 Router::Router(const std::string& router_id, const std::string& ip_address,
