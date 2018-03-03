@@ -25,7 +25,7 @@
 
 #include "router.h"
 
-using json = nlohmann::json;
+using nlohmann::json;
 
 /*!
  * \brief Check if a file exists
@@ -68,6 +68,8 @@ int main(int argc, char** argv) {
         spdlog::set_level(spdlog::level::info);
     }
 
+    // start thread that listens for for SIGTERM and SIGINT
+    // shutdown protobuf library gracefully and exit
     std::thread{[&]() {
         ::sigset_t sigset;
         sigemptyset(&sigset);
@@ -132,5 +134,6 @@ int main(int argc, char** argv) {
 
     logger->info("Router initialized");
 
+    // start routing algorithm
     router.start();
 }
