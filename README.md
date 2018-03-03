@@ -41,6 +41,57 @@ OPTIONS
                     print additional debug information
 ```
 
+## Example topology file
+
+```json
+{
+    "nodes": {
+        "A": {
+            "ip_address": "127.0.0.1",
+            "port": 16022
+        },
+        "B": {
+            "ip_address": "127.0.0.1",
+            "port": 16023
+        },
+        "C": {
+            "ip_address": "127.0.0.1",
+            "port": 16024
+        },
+        "D": {
+            "ip_address": "127.0.0.1",
+            "port": 16025
+        }
+    },
+    "links": [
+        {
+            "source": "A",
+            "target": "D"
+        },
+        {
+            "source": "A",
+            "target": "B"
+        },
+        {
+            "source": "A",
+            "target": "C"
+        },
+        {
+            "source": "B",
+            "target": "D"
+        },
+        {
+            "source": "C",
+            "target": "D"
+        }
+        ]
+}
+```
+
+This will set the network that is shown in the picture below. The `pof` field in the links array determines the possibility of outage. This value can be any number between 0 and 1.
+
+![topology2](example/topology2.png "Topology")
+
 ## Licence
 
 Boost Software License
