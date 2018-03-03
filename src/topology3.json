@@ -15,19 +15,11 @@
         "D": {
             "ip_address": "127.0.0.1",
             "port": 16025
-        },
-        "E": {
-            "ip_address": "127.0.0.1",
-            "port": 16026
-        },
-        "F": {
-            "ip_address": "127.0.0.1",
-            "port": 16027
         }
     },
     "links": [
         {
-            "source": "A",
+            "source": "C",
             "target": "D"
         },
         {
@@ -36,23 +28,11 @@
         },
         {
             "source": "A",
-            "target": "F"
-        },
-        {
-            "source": "B",
             "target": "C"
         },
         {
             "source": "C",
-            "target": "F"
-        },
-        {
-            "source": "C",
-            "target": "E"
-        },
-        {
-            "source": "F",
-            "target": "E"
+            "target": "B"
         }
-    ]
+        ]
 }
