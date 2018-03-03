@@ -39,20 +39,21 @@ bool file_exists(const std::string& filename) {
 
 
 int main(int argc, char** argv) {
-
-
     GOOGLE_PROTOBUF_VERIFY_VERSION;
 
     std::string input;
     std::string id;
     int interval{5};
+    bool verbose{false};
 
     auto cli = (
         clipp::value("topology file", input),
         clipp::value("router id", id),
         clipp::option("-i", "--interval")
-            .doc("router update interval (default: " + std::to_string(interval)
-                 + ")") & clipp::value("seconds", interval));
+            .doc(fmt::format("router update interval (default: {})", interval))
+            & clipp::value("seconds", interval),
+        clipp::option("-v", "--verbose")
+            .doc("print additional debug information").set(verbose));
 
     if (!clipp::parse(argc, argv, cli)) {
         std::cout << clipp::make_man_page(cli, argv[0]);
@@ -60,7 +61,12 @@ int main(int argc, char** argv) {
     }
 
     auto logger = spdlog::stdout_color_mt("logger");
-    spdlog::set_level(spdlog::level::trace);
+
+    if (verbose) {
+        spdlog::set_level(spdlog::level::trace);
+    } else {
+        spdlog::set_level(spdlog::level::info);
+    }
 
     std::thread{[&]() {
         ::sigset_t sigset;
