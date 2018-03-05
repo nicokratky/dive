@@ -1,6 +1,7 @@
 syntax: glob
 
 build/
+documentation/*.pdf
 
 # Created by https://www.gitignore.io/api/osx,c++
 
