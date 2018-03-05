@@ -3,6 +3,12 @@
 \usepackage[ngerman]{babel}
 \usepackage[utf8]{inputenc}
 \usepackage{hyperref}
+\usepackage{fancyvrb}
+\usepackage{minted}
+\usepackage{graphicx}
+\usepackage[section]{placeins}
+
+\graphicspath{{images/}}
 
 \title{%
     DiVe \\
@@ -20,7 +26,7 @@
 \clearpage
 
 \section{Lizenz}
-\begin{verbatim}
+\begin{Verbatim}[fontsize=\small]
 Boost Software License - Version 1.0 - August 17th, 2003
 
 Permission is hereby granted, free of charge, to any person or organization
@@ -48,14 +54,107 @@ DEALINGS IN THE SOFTWARE.
 My apologies. When the previous paragraph was written, lowercase had not yet
 been invented (that would involve another several millennia of evolution).
 I did not mean to shout.
-\end{verbatim}
+\end{Verbatim}
+\clearpage
 
 \section{Aufgabenstellung}
 
+Die Aufgabe besteht darin ein C++-Programm zur Simulation des Distanzvektor-Algorithmus zu entwickeln. Zusätzlich zum Algorithmus sollen zufällige Ausfälle der Verbindungen simuliert werden können.
+
+\subsection{Verwendete Technologien}
+
+Die zu verwendenden Technologien wurden vorgegeben. Nur Google Protocol Buffers wurden zusätzlich verwendet.
+
+\begin{itemize}
+    \item C++14
+    \item CMake und make
+    \item \{fmt\}
+    \item spdlog
+    \item JSON for Modern C++
+    \item Asio (standalone Variante)
+    \item Google Protocol Buffers
+\end{itemize}
+
+\subsection{Distanzvektor-Algorithmus}
+
+Der Distanzvektor-Algorithmus ist eines der einfacheren Routing Protokolle. Es handelt nach dem Prinzip "Teile deinen Nachbarn mit, wie du die Welt siehst".
+
 \section{Konzeption}
+
+Für die Implementation der Simulation wurde nur ein einziges Programm entwickelt. Die Netzwerktopologie kann durch mehrmaliges starten auf entweder verschiedenen Rechnern oder auf ein und demselben Rechner aufgebaut werden. Diese Topologie wird in einer JSON Konfigurationsdatei festgelegt.
+
+\subsection{Klassenstruktur}
+
+% insert UML Diagram
+
+\section{Konfiguration der Topologie}
+
+Die Netzwerktopologie kann durch eine JSON Konfigurationsdatei festgelegt werden. Eine Beispielkonfigurationsdatei ist im Appendix \ref{appendix:config} zu finden. Diese definiert eine Netzwerktopologie wie sie Abbildung \ref{fig:topology} zeigt.
+
+\begin{figure}[!htb]
+    \centering
+    \includegraphics[width=4cm,keepaspectratio]{topology2}
+    \caption{}
+    \label{fig:topology}
+\end{figure}
+
+Die Reihenfolge zwischen den Link Elementen macht hierbei nur einen Unterschied falls ein \textit{pof} Wert gesetzt ist. \textit{pof} steht hierbei für \textit{probability of failure}, was soviel bedeutet wie Ausfallwahrscheinlichkeit. Dieser Wert muss zwischen 0 und 1 liegen und gibt diese Wahrscheinlichkeit des Ausfalls der Verbindung von \textit{source} nach \textit{target} in Prozent an. Der Unterschied ist jedoch nicht für den Nutzer sichtbar. Er besteht lediglich in der Implementierung, da nur der \textit{source} Knoten berechnet ob ein Ausfall vorliegt und falls dies der Fall ist es an den \textit{target} Knoten weitergibt.
 
 \section{Kommandozeile}
 
 \section{Netzwerkübertragung}
+
+\clearpage
+\begin{appendix}
+
+\section{Beispielkonfigurationsdatei}
+\label{appendix:config}
+
+\begin{minted}{json}
+{
+    "nodes": {
+        "A": {
+            "ip_address": "127.0.0.1",
+            "port": 16022
+        },
+        "B": {
+            "ip_address": "127.0.0.1",
+            "port": 16023
+        },
+        "C": {
+            "ip_address": "127.0.0.1",
+            "port": 16024
+        },
+        "D": {
+            "ip_address": "127.0.0.1",
+            "port": 16025
+        }
+    },
+    "links": [
+        {
+            "source": "A",
+            "target": "D"
+        },
+        {
+            "source": "A",
+            "target": "B"
+        },
+        {
+            "source": "A",
+            "target": "C"
+        },
+        {
+            "source": "B",
+            "target": "D"
+        },
+        {
+            "source": "C",
+            "target": "D"
+        }
+        ]
+}
+\end{minted}
+
+\end{appendix}
 
 \end{document}
