@@ -20,7 +20,7 @@
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
 #include "fmt/format.h"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 #include "clipp.h"
 
 #include "router.h"

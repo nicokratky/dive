@@ -22,7 +22,7 @@
 #include "asio.hpp"
 #include "spdlog/spdlog.h"
 #include "fmt/format.h"
-#include "nlohmann/json.hpp"
+#include "json.hpp"
 
 #include "dive.pb.h"
 #include "server.h"
