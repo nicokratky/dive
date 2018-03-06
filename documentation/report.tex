@@ -2,7 +2,12 @@
 
 \usepackage[ngerman]{babel}
 \usepackage[utf8]{inputenc}
-\usepackage{hyperref}
+\usepackage[
+    pdftitle={DiVe - Distance Vector Routing Simulation},
+	pdfsubject={Eine kurze Beschreibung, worum es geht},
+	pdfauthor={Nico Kratky},
+	pdfkeywords={meta, information, pdf, hyperref, latex}
+]{hyperref}
 \usepackage{fancyvrb}
 \usepackage{minted}
 \usepackage{graphicx}
@@ -87,20 +92,36 @@ Für die Implementation der Simulation wurde nur ein einziges Programm entwickel
 
 % insert UML Diagram
 
+\subsection{Programmablauf}
+
 \section{Konfiguration der Topologie}
 
 Die Netzwerktopologie kann durch eine JSON Konfigurationsdatei festgelegt werden. Eine Beispielkonfigurationsdatei ist im Appendix \ref{appendix:config} zu finden. Diese definiert eine Netzwerktopologie wie sie Abbildung \ref{fig:topology} zeigt.
 
-\begin{figure}[!htb]
+\begin{figure}[H]
     \centering
     \includegraphics[width=4cm,keepaspectratio]{topology2}
-    \caption{}
+    \caption{Dies ist eine Caption}
     \label{fig:topology}
 \end{figure}
 
 Die Reihenfolge zwischen den Link Elementen macht hierbei nur einen Unterschied falls ein \textit{pof} Wert gesetzt ist. \textit{pof} steht hierbei für \textit{probability of failure}, was soviel bedeutet wie Ausfallwahrscheinlichkeit. Dieser Wert muss zwischen 0 und 1 liegen und gibt diese Wahrscheinlichkeit des Ausfalls der Verbindung von \textit{source} nach \textit{target} in Prozent an. Der Unterschied ist jedoch nicht für den Nutzer sichtbar. Er besteht lediglich in der Implementierung, da nur der \textit{source} Knoten berechnet ob ein Ausfall vorliegt und falls dies der Fall ist es an den \textit{target} Knoten weitergibt.
 
 \section{Kommandozeile}
+
+Als Benutzerschnittstelle werden Kommandozeilenparameter verwendet. Es gibt zwei Parameter die zwingend übergeben werden müssen. Dies sind einerseits die JSON Konfigurationsdatei und andererseits die Router ID. Die Router ID bestimmt welchen Router der eben gestartete Prozess in der konfigurierten Topologie widerspiegelt. Das Interval in dem die Routing Updates gesendet werden, kann durch den \textit{-i} bzw. \textit{--interval} eingestellt werden. Hier muss ein ganzzahliger Wert übergeben werden. Voreingestellt sind 5 Sekunden. Wenn der \textit{-v} bzw. \textit{--verbose} Parameter übergeben wird, dann werden zusätzliche Information ausgegeben.
+
+\begin{Verbatim}
+SYNOPSIS
+        ./router <topology file> <router id> [-i <seconds>] [-v]
+
+OPTIONS
+        -i, --interval
+                    router update interval (default: 5)
+
+        -v, --verbose
+                    print additional debug information
+\end{Verbatim}
 
 \section{Netzwerkübertragung}
 
