@@ -71,11 +71,14 @@ int main(int argc, char** argv) {
     // start thread that listens for for SIGTERM and SIGINT
     // shutdown protobuf library gracefully and exit
     std::thread{[&]() {
+        // Block SIGTERM and SIGINT at process-level
         ::sigset_t sigset;
         sigemptyset(&sigset);
         sigaddset(&sigset, SIGTERM);
         sigaddset(&sigset, SIGINT);
         sigprocmask(SIG_BLOCK, &sigset, nullptr);
+
+        // wait for SIGTERM or SIGINT
         int sig;
         sigwait(&sigset, &sig);
 
