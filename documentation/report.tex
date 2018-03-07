@@ -4,16 +4,27 @@
 \usepackage[utf8]{inputenc}
 \usepackage[
     pdftitle={DiVe - Distance Vector Routing Simulation},
-	pdfsubject={Eine kurze Beschreibung, worum es geht},
 	pdfauthor={Nico Kratky},
-	pdfkeywords={meta, information, pdf, hyperref, latex}
+	pdfkeywords={distance vector, routing, networking, cpp}
 ]{hyperref}
 \usepackage{fancyvrb}
 \usepackage{minted}
-\usepackage{graphicx}
-\usepackage[section]{placeins}
 
+\usepackage{graphicx}
 \graphicspath{{images/}}
+
+\usepackage{listings}
+\lstset{
+language=C++,
+numbers=left,
+basicstyle=\ttfamily,
+keywordstyle=\color{blue}\ttfamily,
+stringstyle=\color{red}\ttfamily,
+commentstyle=\color{green}\ttfamily,
+}
+
+\usepackage{varioref}
+\usepackage{parskip}
 
 \title{%
     DiVe \\
@@ -95,8 +106,9 @@ Für die Implementation der Simulation wurde nur ein einziges Programm entwickel
 \subsection{Programmablauf}
 
 \section{Konfiguration der Topologie}
+\label{sec:configuration}
 
-Die Netzwerktopologie kann durch eine JSON Konfigurationsdatei festgelegt werden. Eine Beispielkonfigurationsdatei ist im Appendix \ref{appendix:config} zu finden. Diese definiert eine Netzwerktopologie wie sie Abbildung \ref{fig:topology} zeigt.
+Die Netzwerktopologie kann durch eine JSON Konfigurationsdatei festgelegt werden. Eine Beispielkonfigurationsdatei ist im Appendix \vref{appendix:config} zu finden. Diese definiert eine Netzwerktopologie wie sie Abbildung \vref{fig:topology} zeigt.
 
 \begin{figure}[H]
     \centering
@@ -124,6 +136,57 @@ OPTIONS
 \end{Verbatim}
 
 \section{Netzwerkübertragung}
+
+% Asio zum Datenaustausch
+% Protobuf
+% Length prefixing
+% jeder Router ist Client und Server gleichzeitig
+% 'UDP over TCP', weil immer eine neue Verbindung aufgebaut wird
+%       => ist einfacher handzuhaben da sich nicht jeder die offenen Verbindungen merken muss
+
+Für sämtliche Kommunikation zwischen Routern wird die C++ Bibliothek Asio verwendet. Asio wird vom australischen Softwareentwickler Christopher Kohlhoff entwickelt. Zusätzlich werden zur Datenserialisierung Google Protocol Buffers eingesetzt.
+
+Da laut Aufgabenbeschreibung TCP als Netzwerkprotokoll verwendet werden muss, wird zusätzlich zu jeder Nachricht ein Header mitgeschickt. Dieser Header enthält ausschließlich Information über die Länge des folgenden Datenpaketes. Dies geschieht, da TCP mit Datenströmen arbeitet und somit keine Information über Nachrichtengrenzen vorliegen. In diesem Projekt wird ein 4-Byte langes Feld in Network-byte Order verwendet, um diesen Header darzustellen.
+
+Allerdings bildet diese Vorgehensweise ein Sicherheitsrisiko, da der empfangende Kommunikationspartner solange vom Datenstream liest, bis er die korrekte Anzahl an Bytes erreicht hat. Dies kann sich ein Angreifer zu nutze machen und einen sehr großen Längen-Header in den Strom schicken. Die andere Seite wird nun sehr sehr lange versuchen zu lesen.
+
+\subsection{Server}
+
+\subsection{Client}
+
+\section{Ausfallsimulation}
+
+% Ausfall kann simuliert werden weil distance vector ein DYNAMISCHES Routing Protokoll ist
+% pof in config Datei
+% Ausfall wird durch eine bernoulli verteilung berechnet
+
+Der zufällige Ausfall von Verbindungen zwischen jeweils zwei Routern kann durch zusätzliche Konfiguration simuliert werden. Da der Distanzvektor-Algorithmus solche Ausfälle automatisch erkennt und seine Routingtabelle dementsprechend aktualisiert, ist er in die Gruppe der \textit{dynamischen} Routingprotokolle einzuordnen.
+
+Wie schon in Abschnitt \vref{sec:configuration} erwähnt, erfolgt solch eine Ausfallsimulation durch hinzufügen eines \textit{pof} Wertes in die Konfigurationsdatei.
+
+Implementiert ist diese Simulation als Bernoulli-Verteilung. Diese Verteilung hat nur zwei mögliche Resultate, entweder 0 oder 1, was in diesem Fall einem Wahrheitswert entspricht und das Zustandekommen einer Ausfallsimulation bestimmt.
+
+\begin{listing}[H]
+\centering
+\begin{minipage}{0.5\textwidth}
+\begin{minted}{cpp}
+void Router::simulate_outage() {
+    std::random_device rd;
+    std::mt19937 gen{rd()};
+
+    std::bernoulli_distribution d{pof_};
+
+    if(d(gen)) {
+        // Verbindung soll ausfallen
+    } else {
+        // Kein Ausfall
+    }
+}
+\end{minted}
+\end{minipage}
+\label{code:simulate_outage}
+\caption{Ausfallsimulation}
+\end{listing}
 
 \clearpage
 \begin{appendix}
