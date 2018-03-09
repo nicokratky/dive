@@ -35,7 +35,7 @@ include_directories($ENV{SPDLOG_INCLUDE_PATH})
 message(STATUS "SPDLOG: $ENV{SPDLOG_INCLUDE_PATH}")
 
 # https://github.com/fmtlib/fmt (http://fmtlib.net)
-include_directories($ENV{FMT_PATH})  # should refer to the root directory of fmt
+include_directories($ENV{FMT_PATH}/include/)  # should refer to the root directory of fmt
 message(STATUS "FMT: $ENV{FMT_PATH}")
 
 # https://github.com/nlohmann/json (https://nlohmann.github.io/json/)
@@ -45,8 +45,6 @@ message(STATUS "JSON: $ENV{JSON_INCLUDE_PATH}")
 # https://github.com/muellan/clipp
 include_directories($ENV{CLIPP_INCLUDE_PATH})
 message(STATUS "CLIPP: $ENV{CLIPP_INCLUDE_PATH}")
-
-set(FMT_LIB_PATH $ENV{FMT_PATH}/build/fmt/libfmt.a)
 
 # only needed for protobuf
 # ko:: Be aware: variable names changed in cmake 3.6 from PROTOBUF_* to Protobuf_*
@@ -72,7 +70,7 @@ macro(create_targets)
             include_directories(${CMAKE_SOURCE_DIR}/include/${curr_target}/)
 
             add_executable(${curr_target} ${sources} ${PROTO_SRCS} ${PROTO_HDRS})
-            target_link_libraries(${curr_target} ${CMAKE_THREAD_LIBS_INIT} ${FMT_LIB_PATH} ${PROTOBUF_LIBRARIES})
+            target_link_libraries(${curr_target} ${CMAKE_THREAD_LIBS_INIT} ${PROTOBUF_LIBRARIES})
         endforeach(curr_target)
     else()
         message(${ARGV0})
@@ -87,7 +85,7 @@ macro(create_targets)
         endif()
 
         add_executable(${ARGV0} ${sources} ${PROTO_SRCS} ${PROTO_HDRS})
-        target_link_libraries(${ARGV0} ${CMAKE_THREAD_LIBS_INIT} ${FMT_LIB_PATH} ${PROTOBUF_LIBRARIES})
+        target_link_libraries(${ARGV0} ${CMAKE_THREAD_LIBS_INIT} ${PROTOBUF_LIBRARIES})
     endif()
 endmacro(create_targets)
 
