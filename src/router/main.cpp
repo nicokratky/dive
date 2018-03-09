@@ -107,8 +107,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    json nodes{j["nodes"]};
-    json links{j["links"]};
+    json nodes = j["nodes"];
+    json links = j["links"];
 
     // If either no nodes or links are available, abort
     if (nodes.empty() || links.empty()) {
