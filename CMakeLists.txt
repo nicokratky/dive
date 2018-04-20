@@ -35,7 +35,7 @@ include_directories($ENV{SPDLOG_INCLUDE_PATH})
 message(STATUS "SPDLOG: $ENV{SPDLOG_INCLUDE_PATH}")
 
 # https://github.com/fmtlib/fmt (http://fmtlib.net)
-include_directories($ENV{FMT_PATH}/include/)  # should refer to the root directory of fmt
+include_directories($ENV{FMT_PATH})  # should refer to the root directory of fmt
 message(STATUS "FMT: $ENV{FMT_PATH}")
 
 # https://github.com/nlohmann/json (https://nlohmann.github.io/json/)
